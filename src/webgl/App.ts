@@ -15,7 +15,7 @@ export class WebGLApp {
   private reducedMotion: boolean;
 
   private camTarget = new THREE.Vector3(0.4, 0.4, 0);
-  private camPos = new THREE.Vector3(0, 0.6, 6.2);
+  private camPos = new THREE.Vector3(0, 0.35, 7.0);
   private lookAt = new THREE.Vector3();
 
   constructor(private canvas: HTMLCanvasElement) {
@@ -36,7 +36,7 @@ export class WebGLApp {
     this.renderer.setSize(window.innerWidth, window.innerHeight, false);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.2;
     this.renderer.shadowMap.enabled = !this.isMobile;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -48,7 +48,7 @@ export class WebGLApp {
     );
     this.camera.position.copy(this.camPos);
 
-    this.scene.fog = new THREE.FogExp2(0x0b0d10, 0.045);
+    this.scene.fog = new THREE.FogExp2(0x0b0d10, 0.018);
 
     this.setupLights();
     this.hero = new HeroScene(this.reducedMotion);
@@ -90,10 +90,10 @@ export class WebGLApp {
   }
 
   private setupLights() {
-    const ambient = new THREE.AmbientLight(0xb8c4d4, 0.35);
+    const ambient = new THREE.AmbientLight(0xc5d0dc, 0.55);
     this.scene.add(ambient);
 
-    const key = new THREE.DirectionalLight(0xfff2e0, 1.35);
+    const key = new THREE.DirectionalLight(0xfff4e8, 1.7);
     key.position.set(4, 6, 5);
     key.castShadow = !this.isMobile;
     key.shadow.mapSize.set(1024, 1024);
@@ -109,36 +109,39 @@ export class WebGLApp {
     fill.position.set(-2, 1, 4);
     this.scene.add(fill);
 
-    const ember = new THREE.PointLight(0xff5a1f, 0.65, 12, 2);
-    ember.position.set(0.5, -1.8, 1.2);
+    const ember = new THREE.PointLight(0xff5a1f, 0.55, 14, 2);
+    ember.position.set(0.4, -2.2, 1.4);
     this.scene.add(ember);
+
+    const hemi = new THREE.HemisphereLight(0xdde7f2, 0x1a1510, 0.35);
+    this.scene.add(hemi);
   }
 
   private updateCameraForSection(id: string, t: number) {
     const mobile = this.isMobile;
-    const baseZ = mobile ? 7.2 : 6.2;
-    const baseX = mobile ? 0 : 0.15;
+    const baseZ = mobile ? 8.0 : 7.0;
+    const baseX = mobile ? 0 : 0.2;
 
     switch (id) {
       case "hero":
-        this.camPos.set(baseX, 0.55 + t * 0.2, baseZ - t * 0.4);
-        this.camTarget.set(mobile ? 0 : 0.55, 0.35, 0);
+        this.camPos.set(baseX, 0.35 + t * 0.15, baseZ - t * 0.35);
+        this.camTarget.set(mobile ? 0 : 0.55, 0.15, 0);
         break;
       case "systems":
-        this.camPos.set(baseX + 0.4, 0.3, baseZ - 0.8);
-        this.camTarget.set(mobile ? 0 : 0.4, 0.1, 0);
+        this.camPos.set(baseX + 0.35, 0.15, baseZ - 0.6);
+        this.camTarget.set(mobile ? 0 : 0.4, 0.0, 0);
         break;
       case "variants":
-        this.camPos.set(baseX - 0.2, 0.5, baseZ - 0.3);
-        this.camTarget.set(mobile ? 0 : 0.5, 0.2, 0);
+        this.camPos.set(baseX - 0.15, 0.3, baseZ - 0.25);
+        this.camTarget.set(mobile ? 0 : 0.5, 0.1, 0);
         break;
       case "specs":
-        this.camPos.set(baseX + 0.8, 1.1, baseZ - 1.1);
-        this.camTarget.set(0.2, 0.2, 0);
+        this.camPos.set(baseX + 0.7, 0.9, baseZ - 0.9);
+        this.camTarget.set(0.2, 0.1, 0);
         break;
       default:
-        this.camPos.set(baseX, 0.45, baseZ);
-        this.camTarget.set(mobile ? 0 : 0.45, 0.2, 0);
+        this.camPos.set(baseX, 0.3, baseZ);
+        this.camTarget.set(mobile ? 0 : 0.45, 0.1, 0);
         break;
     }
   }

@@ -10,17 +10,17 @@ export class HeroScene {
   constructor(reducedMotion = false) {
     this.reducedMotion = reducedMotion;
     this.rocket = createRocketModel();
-    this.rocket.position.set(0.85, -0.35, 0);
-    this.rocket.rotation.y = -0.55;
-    this.rocket.rotation.z = 0.06;
+    this.rocket.position.set(0.95, 0.05, 0);
+    this.rocket.rotation.y = -0.4;
+    this.rocket.rotation.z = 0.03;
     this.group.add(this.rocket);
 
     const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(4.5, 48),
+      new THREE.CircleGeometry(5.2, 64),
       new THREE.MeshStandardMaterial({
-        color: 0x14181f,
-        metalness: 0.2,
-        roughness: 0.9,
+        color: 0x10141a,
+        metalness: 0.15,
+        roughness: 0.92,
       }),
     );
     ground.rotation.x = -Math.PI / 2;
@@ -38,28 +38,28 @@ export class HeroScene {
 
     switch (sectionId) {
       case "hero": {
-        this.rocket.rotation.y = -0.55 + k * 0.35;
-        this.rocket.position.y = -0.35 + k * 0.25;
+        this.rocket.rotation.y = -0.45 + k * 0.3;
+        this.rocket.position.y = -0.15 + k * 0.2;
         this.rocket.setExplode(0);
         break;
       }
       case "systems": {
-        this.rocket.rotation.y = -0.2 + k * 0.4;
-        this.rocket.position.y = -0.1;
+        this.rocket.rotation.y = -0.15 + k * 0.35;
+        this.rocket.position.y = 0.05;
         this.rocket.setExplode(k);
         break;
       }
       case "variants": {
         this.rocket.setExplode(0);
-        this.rocket.rotation.y = 0.2 + k * 0.5;
-        this.rocket.position.y = -0.2;
+        this.rocket.rotation.y = 0.25 + k * 0.45;
+        this.rocket.position.y = -0.05;
         break;
       }
       case "specs": {
         this.rocket.setExplode(0);
-        this.rocket.rotation.y = 0.7;
-        this.rocket.rotation.x = -0.15 * k;
-        this.rocket.position.y = -0.15;
+        this.rocket.rotation.y = 0.75;
+        this.rocket.rotation.x = -0.12 * k;
+        this.rocket.position.y = 0;
         break;
       }
       case "reel":
@@ -67,8 +67,8 @@ export class HeroScene {
       case "footer": {
         this.rocket.setExplode(0);
         this.rocket.rotation.x = 0;
-        this.rocket.rotation.y = 0.85;
-        this.rocket.position.y = -0.25;
+        this.rocket.rotation.y = 0.9;
+        this.rocket.position.y = -0.1;
         break;
       }
       default:
