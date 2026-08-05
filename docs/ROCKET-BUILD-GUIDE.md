@@ -483,8 +483,9 @@ Astro frontmatter + meta:
 
 ## 9. Phase 8 — Deploy เสร็จโปรเจกต์ (วัน 15)
 
-> **ข้ามไว้ก่อนได้** — คู่มือเต็มอยู่ที่ [`docs/DEPLOY.md`](./DEPLOY.md)  
-> รันเมื่อพร้อม ship v1 (หลัง motion / waitlist / mobile smoke)
+> **สถานะปัจจุบัน: local only — ยังไม่ deploy**  
+> รันบนเครื่องด้วย `npm run dev` จนกว่าจะพร้อม ship  
+> คู่มือเต็มอยู่ที่ [`docs/DEPLOY.md`](./DEPLOY.md) (เปิดเมื่อจะขึ้น Cloudflare ทีหลัง)
 
 ### 9.1 Build
 

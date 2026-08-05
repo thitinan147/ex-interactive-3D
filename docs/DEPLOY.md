@@ -1,6 +1,8 @@
 # Deploy — Cloudflare Pages
 
-คู่มือ deploy โปรเจกต์นี้ (ข้ามไว้ก่อนได้ — รันเมื่อพร้อม ship v1)
+> **สถานะปัจจุบัน: ยังไม่ deploy**  
+> โปรเจกต์ทำ **local only** ก่อน (`npm run dev` / `npm run preview`)  
+> เปิดเอกสารนี้เมื่อพร้อม ship v1 เท่านั้น
 
 Repo: `https://github.com/thitinan147/ex-interactive-3D`  
 Stack: Astro **static** → output `dist/`

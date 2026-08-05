@@ -60,3 +60,6 @@ ehthumbs.db
 # optional local overrides
 *.local
 .vscode/*.local.json
+
+# OG compose helper (source stays; regenerated HTML optional)
+scripts/og-compose.html

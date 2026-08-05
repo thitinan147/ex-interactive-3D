@@ -1,15 +1,37 @@
+---
+const formEndpoint = import.meta.env.PUBLIC_FORMSPREE_ENDPOINT ?? "";
+const hasEndpoint = Boolean(formEndpoint);
+---
+
 <section class="o-section" id="order">
   <div class="o-container">
     <div class="o-section__inner">
       <p class="o-kicker js-reveal">Pre-order / waitlist</p>
       <h2 class="o-title o-title--sm js-reveal">Reserve a flight slot.</h2>
       <p class="o-body o-body--wide js-reveal">
-        Register interest for V-9 manifests. No payment collected on this demo — wire Mailchimp or your CRM next.
+        {
+          hasEndpoint
+            ? "Register interest for V-9 manifests. We’ll follow up when slots open — no payment on this form."
+            : "Register interest for V-9 manifests. Demo mode: set PUBLIC_FORMSPREE_ENDPOINT to collect real emails."
+        }
       </p>
-      <form class="order-form js-reveal" id="order-form">
+      <form
+        class="order-form js-reveal"
+        id="order-form"
+        method="POST"
+        data-endpoint={formEndpoint}
+      >
+        <input type="hidden" name="_subject" value="Vektor V-9 waitlist" />
+        <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true" />
         <label>
           Work email
-          <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" />
+          <input
+            type="email"
+            name="email"
+            required
+            autocomplete="email"
+            placeholder="you@company.com"
+          />
         </label>
         <label>
           Preferred configuration
@@ -19,7 +41,10 @@
             <option value="reusable">V-9 Reusable</option>
           </select>
         </label>
-        <button class="btn btn--primary" type="submit">Join waitlist</button>
+        <p class="form-status" id="order-form-status" role="status" aria-live="polite" hidden></p>
+        <button class="btn btn--primary" type="submit" data-submit-label="Join waitlist">
+          Join waitlist
+        </button>
       </form>
     </div>
   </div>

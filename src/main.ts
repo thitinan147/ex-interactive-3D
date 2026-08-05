@@ -2,6 +2,7 @@ import { WebGLApp } from "./webgl/App";
 import { applyReducedMotionClass } from "./motion/reducedMotion";
 import { Preloader, runBootProgress } from "./motion/preloader";
 import { initSectionReveal } from "./motion/sectionReveal";
+import { bindWaitlistForm } from "./motion/waitlistForm";
 
 let app: WebGLApp | null = null;
 let revealDispose: (() => void) | null = null;
@@ -39,21 +40,6 @@ function bindVideoOverlay() {
   });
 }
 
-function bindOrderForm() {
-  const form = document.querySelector<HTMLFormElement>("#order-form");
-  form?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const btn = form.querySelector("button[type=submit]");
-    if (!btn) return;
-    const prev = btn.textContent;
-    btn.textContent = "Registered";
-    window.setTimeout(() => {
-      if (prev) btn.textContent = prev;
-      form.reset();
-    }, 2200);
-  });
-}
-
 async function init() {
   applyReducedMotionClass();
 
@@ -80,7 +66,7 @@ async function init() {
 
   if (app) bindVariants(app);
   bindVideoOverlay();
-  bindOrderForm();
+  bindWaitlistForm();
 
   await preloader.finish();
   reveal.revealHeroNow();
