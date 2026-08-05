@@ -1,0 +1,37 @@
+:root {
+  --color-void: #0b0d10;
+  --color-ink: #12151a;
+  --color-steel: #c5ccd6;
+  --color-steel-dim: #8b939f;
+  --color-white: #f4f1ea;
+  --color-ember: #ff5a1f;
+  --color-ember-soft: #ff7a45;
+  --color-fuel: #3dd6c6;
+  --color-line: rgba(244, 241, 234, 0.12);
+  --color-glass: rgba(11, 13, 16, 0.55);
+
+  --display-font: "Literata", "Times New Roman", Georgia, serif;
+  --mono-font: "DM Mono", ui-monospace, "Cascadia Code", monospace;
+
+  --h1: clamp(2.75rem, 7vw, 5.5rem);
+  --h2: clamp(1.75rem, 3.5vw, 2.75rem);
+  --h3: clamp(1.15rem, 2vw, 1.5rem);
+  --body1: clamp(1rem, 1.1vw, 1.125rem);
+  --body2: 0.95rem;
+  --sub: 0.75rem;
+
+  --site-padding-x: clamp(1.25rem, 4vw, 3.5rem);
+  --site-padding-y: clamp(1rem, 2vw, 1.5rem);
+  --section-min-h: 100svh;
+  --header-h: 4rem;
+  --grid-columns: 12;
+  --radius-pill: 999px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --vh: 1vh;
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --site-padding-x: 1.15rem;
+  }
+}
