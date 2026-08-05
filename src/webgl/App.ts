@@ -8,7 +8,7 @@ export class WebGLApp {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
-  private clock = new THREE.Clock();
+  private timer = new THREE.Timer();
   private hero: HeroScene;
   private scroll = new ScrollDirector();
   private raf = 0;
@@ -44,7 +44,11 @@ export class WebGLApp {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = this.isMobile ? 1.1 : 1.2;
     this.renderer.shadowMap.enabled = !this.isMobile;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    if (this.renderer.shadowMap.enabled) {
+      this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    }
+
+    this.timer.connect(document);
 
     this.camera = new THREE.PerspectiveCamera(
       this.isMobile ? 38 : 32,
@@ -92,6 +96,7 @@ export class WebGLApp {
     window.removeEventListener("resize", this.onResize);
     document.removeEventListener("visibilitychange", this.onVisibility);
     this.scroll.dispose();
+    this.timer.disconnect();
     this.renderer.dispose();
     this.scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
@@ -106,7 +111,7 @@ export class WebGLApp {
   private onVisibility = () => {
     this.visible = document.visibilityState === "visible";
     if (this.visible) {
-      this.clock.getDelta();
+      this.timer.update();
       this.needsRender = true;
       if (!this.raf) this.raf = requestAnimationFrame(this.tick);
     } else {
@@ -221,8 +226,9 @@ export class WebGLApp {
     }
     this.raf = requestAnimationFrame(this.tick);
 
-    const delta = this.clock.getDelta();
-    const elapsed = this.clock.getElapsedTime();
+    this.timer.update();
+    const delta = this.timer.getDelta();
+    const elapsed = this.timer.getElapsed();
 
     this.hero.update(delta, elapsed);
 

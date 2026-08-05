@@ -38,6 +38,7 @@ npm run preview
 - `docs/DEPLOY.md` — Cloudflare Pages (ทีหลัง — ยังไม่รัน)
 - `docs/oryzo-ai-tech-stack.md` — reference stack breakdown
 - `docs/product-brief.md` — product / brand notes
+- `docs/QA-MOBILE.md` — mobile QA checklist + automated results
 
 ## Waitlist + Open Graph (local)
 
