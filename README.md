@@ -16,6 +16,7 @@ Style and architecture reference: Lusion / [oryzo.ai](https://oryzo.ai/) (see `d
 | Motion / preloader | Formspree endpoint production |
 | OG asset ใน `public/meta/` | Public URL / OG preview จริงบนโซเชียล |
 | Waitlist **demo mode** | Analytics / domain |
+| Mobile layout + perf (dynamic `three`, low-quality rocket) | Real-device QA ทุกเครื่อง |
 
 ## Quick start
 

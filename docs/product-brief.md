@@ -16,6 +16,7 @@ Deploy, Formspree จริง, domain = ทำทีหลัง
 | Language | English (UI); docs may be Thai |
 | Variants | Standard · Heavy · Reusable |
 | Runtime target now | Local dev / preview only |
+| Mobile | Text scrim + lower rocket framing; WebGL low quality path |
 
 ## Tagline
 

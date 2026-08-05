@@ -31,6 +31,8 @@ function mat(
   });
 }
 
+export type RocketQuality = "high" | "low";
+
 function hexTexture(size = 256): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -72,21 +74,27 @@ function hexTexture(size = 256): THREE.CanvasTexture {
   return tex;
 }
 
-function gridFin(metal: THREE.Material, dark: THREE.Material) {
+function gridFin(
+  metal: THREE.Material,
+  dark: THREE.Material,
+  dense = true,
+) {
   const g = new THREE.Group();
   const plate = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.36, 0.02), dark);
   g.add(plate);
 
   const beamH = new THREE.BoxGeometry(0.42, 0.016, 0.018);
   const beamV = new THREE.BoxGeometry(0.016, 0.3, 0.018);
-  for (let i = -2; i <= 2; i++) {
+  const hRange = dense ? 2 : 1;
+  const vRange = dense ? 3 : 2;
+  for (let i = -hRange; i <= hRange; i++) {
     const h = new THREE.Mesh(beamH, metal);
-    h.position.set(0, i * 0.06, 0.016);
+    h.position.set(0, i * (dense ? 0.06 : 0.1), 0.016);
     g.add(h);
   }
-  for (let i = -3; i <= 3; i++) {
+  for (let i = -vRange; i <= vRange; i++) {
     const v = new THREE.Mesh(beamV, metal);
-    v.position.set(i * 0.055, 0, 0.016);
+    v.position.set(i * (dense ? 0.055 : 0.08), 0, 0.016);
     g.add(v);
   }
 
@@ -157,38 +165,46 @@ function nozzle(copper: THREE.Material, dark: THREE.Material) {
   return g;
 }
 
-export function createRocketModel(): RocketModel {
+export function createRocketModel(quality: RocketQuality = "high"): RocketModel {
+  const low = quality === "low";
+  const segs = low ? 20 : 48;
+  const sphereW = low ? 16 : 40;
+  const sphereH = low ? 12 : 28;
+  const ringSegs = low ? 24 : 48;
+
   const root = new THREE.Group() as RocketModel;
   root.name = "rocket";
 
   const bodyMat = mat(VARIANT.standard.body, {
     metalness: 0.12,
     roughness: 0.42,
-    clearcoat: 0.45,
+    clearcoat: low ? 0.15 : 0.45,
     clearcoatRoughness: 0.3,
   });
   const tipMat = mat(VARIANT.standard.tip, {
     metalness: 0.9,
     roughness: 0.25,
+    clearcoat: low ? 0 : 0.15,
   });
-  const metalMat = mat(0xb0b7c0, { metalness: 0.85, roughness: 0.3 });
-  const darkMat = mat(0x2c3138, { metalness: 0.7, roughness: 0.4 });
+  const metalMat = mat(0xb0b7c0, { metalness: 0.85, roughness: 0.3, clearcoat: 0 });
+  const darkMat = mat(0x2c3138, { metalness: 0.7, roughness: 0.4, clearcoat: 0 });
   const copperMat = mat(0xb87333, {
     metalness: 0.95,
     roughness: 0.28,
-    clearcoat: 0.2,
+    clearcoat: low ? 0 : 0.2,
   });
   const copperHot = mat(0xc45c28, {
     metalness: 0.9,
     roughness: 0.32,
     emissive: new THREE.Color(0x4a1800),
     emissiveIntensity: 0.25,
+    clearcoat: 0,
   });
   const tpsMat = mat(VARIANT.standard.tps, {
-    map: hexTexture(),
+    map: hexTexture(low ? 128 : 256),
     metalness: 0.45,
     roughness: 0.38,
-    clearcoat: 0.55,
+    clearcoat: low ? 0.2 : 0.55,
     clearcoatRoughness: 0.25,
   });
 
@@ -196,32 +212,39 @@ export function createRocketModel(): RocketModel {
   body.name = "body";
 
   const fuselage = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.52, 0.56, 3.4, 48),
+    new THREE.CylinderGeometry(0.52, 0.56, 3.4, segs),
     bodyMat,
   );
   fuselage.position.y = 0.1;
   body.add(fuselage);
 
   const upperTaper = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.4, 0.52, 0.55, 48),
+    new THREE.CylinderGeometry(0.4, 0.52, 0.55, segs),
     bodyMat,
   );
   upperTaper.position.y = 2.05;
   body.add(upperTaper);
 
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.4, 40, 28), bodyMat);
+  const nose = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, sphereW, sphereH),
+    bodyMat,
+  );
   nose.scale.set(1, 1.55, 1);
   nose.position.y = 2.55;
   body.add(nose);
 
-  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.08, 20, 16), tipMat);
+  const tip = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, low ? 10 : 20, low ? 8 : 16),
+    tipMat,
+  );
   tip.scale.set(1, 1.3, 1);
   tip.position.y = 3.2;
   body.add(tip);
 
-  for (const y of [1.6, 0.7, -0.2, -1.0]) {
+  const ringYs = low ? [1.6, -0.2] : [1.6, 0.7, -0.2, -1.0];
+  for (const y of ringYs) {
     const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(0.545, 0.008, 8, 48),
+      new THREE.TorusGeometry(0.545, 0.008, 6, ringSegs),
       darkMat,
     );
     ring.rotation.x = Math.PI / 2;
@@ -234,13 +257,13 @@ export function createRocketModel(): RocketModel {
   const heatShield = new THREE.Group();
   heatShield.name = "heatShield";
   const tps = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.57, 0.5, 1.65, 48),
+    new THREE.CylinderGeometry(0.57, 0.5, 1.65, segs),
     tpsMat,
   );
   tps.position.y = -1.55;
   heatShield.add(tps);
   const tpsLower = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.5, 0.4, 0.35, 48),
+    new THREE.CylinderGeometry(0.5, 0.4, 0.35, segs),
     tpsMat,
   );
   tpsLower.position.y = -2.45;
@@ -251,7 +274,7 @@ export function createRocketModel(): RocketModel {
   gridFins.name = "gridFins";
   gridFins.position.y = 1.75;
   for (let i = 0; i < 4; i++) {
-    const fin = gridFin(metalMat, darkMat);
+    const fin = gridFin(metalMat, darkMat, !low);
     const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
     fin.position.set(Math.cos(a) * 0.62, 0, Math.sin(a) * 0.62);
     fin.rotation.y = -a + Math.PI / 2;
@@ -297,17 +320,25 @@ export function createRocketModel(): RocketModel {
   skirt.position.y = 0.14;
   engines.add(skirt);
 
-  const nozzles: [number, number, THREE.Material][] = [
-    [0, 0, copperHot],
-    [0.15, 0, copperMat],
-    [-0.15, 0, copperMat],
-    [0.075, 0.13, copperMat],
-    [-0.075, 0.13, copperMat],
-    [0.075, -0.13, copperMat],
-    [-0.075, -0.13, copperMat],
-    [0.2, 0.09, copperMat],
-    [-0.2, 0.09, copperMat],
-  ];
+  const nozzles: [number, number, THREE.Material][] = low
+    ? [
+        [0, 0, copperHot],
+        [0.15, 0, copperMat],
+        [-0.15, 0, copperMat],
+        [0.075, 0.13, copperMat],
+        [-0.075, 0.13, copperMat],
+      ]
+    : [
+        [0, 0, copperHot],
+        [0.15, 0, copperMat],
+        [-0.15, 0, copperMat],
+        [0.075, 0.13, copperMat],
+        [-0.075, 0.13, copperMat],
+        [0.075, -0.13, copperMat],
+        [-0.075, -0.13, copperMat],
+        [0.2, 0.09, copperMat],
+        [-0.2, 0.09, copperMat],
+      ];
   for (const [x, z, m] of nozzles) {
     const n = nozzle(m, darkMat);
     n.position.set(x, 0, z);

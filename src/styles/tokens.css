@@ -33,5 +33,9 @@
 @media (max-width: 767.98px) {
   :root {
     --site-padding-x: 1.15rem;
+    --h1: clamp(2.1rem, 9.5vw, 2.85rem);
+    --h2: clamp(1.45rem, 5.5vw, 1.85rem);
+    --section-min-h: 100svh;
+    --header-h: 3.5rem;
   }
 }
