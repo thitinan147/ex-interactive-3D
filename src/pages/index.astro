@@ -13,6 +13,12 @@ import { absoluteUrl, siteConfig } from "../lib/site";
 
 const canonical = absoluteUrl("/", Astro.site);
 const ogImage = absoluteUrl(siteConfig.ogImagePath, Astro.site);
+const vimeoId = import.meta.env.PUBLIC_VIMEO_ID ?? "";
+const vimeoHash = import.meta.env.PUBLIC_VIMEO_HASH ?? "";
+const cfBeacon = import.meta.env.PUBLIC_CF_BEACON ?? "";
+const localReel = "/videos/launch-reel.mp4";
+const localPoster = "/videos/launch-reel-poster.jpg";
+const hasReel = Boolean(vimeoId) || true;
 ---
 
 <html lang="en">
@@ -45,10 +51,25 @@ const ogImage = absoluteUrl(siteConfig.ogImagePath, Astro.site);
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    {
+      vimeoId && (
+        <link rel="preconnect" href="https://player.vimeo.com" crossorigin />
+      )
+    }
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap"
       rel="stylesheet"
     />
+    {
+      cfBeacon && (
+        <script
+          is:inline
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={`{"token": "${cfBeacon}"}`}
+        />
+      )
+    }
   </head>
   <body>
     <canvas id="canvas" aria-hidden="true"></canvas>
@@ -61,19 +82,35 @@ const ogImage = absoluteUrl(siteConfig.ogImagePath, Astro.site);
         <Systems />
         <Variants />
         <Specs />
-        <Reel />
+        <Reel hasReel={hasReel} />
         <Order />
         <Footer />
       </main>
       <div id="scroll-indicator">Scroll to continue</div>
     </div>
 
-    <div id="video-overlay" hidden>
+    <div
+      id="video-overlay"
+      hidden
+      data-local-src={localReel}
+      data-local-poster={localPoster}
+      data-vimeo-id={vimeoId}
+      data-vimeo-hash={vimeoHash}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Launch reel"
+    >
       <button class="video-overlay__close is-interactive" type="button" data-close-reel>
         Close
       </button>
       <div class="video-overlay__frame">
-        Vimeo player slot · wire reel in Phase 6
+        <div class="video-overlay__placeholder" hidden>
+          <p class="video-overlay__placeholder-title">Launch reel</p>
+          <p class="video-overlay__placeholder-body">
+            Local Grok reel missing. Re-generate with image_to_video or set
+            <code>PUBLIC_VIMEO_ID</code>.
+          </p>
+        </div>
       </div>
     </div>
 

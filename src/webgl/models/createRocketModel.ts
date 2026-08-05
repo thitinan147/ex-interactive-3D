@@ -33,35 +33,44 @@ function mat(
 
 export type RocketQuality = "high" | "low";
 
-function hexTexture(size = 256): THREE.CanvasTexture {
+function hexTexture(size = 256, highDetail = false): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#1a1e24";
+  ctx.fillStyle = "#12151a";
   ctx.fillRect(0, 0, size, size);
 
-  const radius = size / 11;
+  const radius = size / (highDetail ? 12 : 11);
   const h = radius * Math.sqrt(3);
-  for (let row = -1; row < 16; row++) {
-    for (let col = -1; col < 14; col++) {
+  for (let row = -1; row < 18; row++) {
+    for (let col = -1; col < 16; col++) {
       const x = col * radius * 1.5;
       const y = row * h + ((col & 1) * h) / 2;
-      const shade = 8 + ((row * 3 + col * 5) % 7);
-      ctx.fillStyle = `rgb(${shade},${shade + 1},${shade + 3})`;
+      const shade = 6 + ((row * 3 + col * 5) % 10);
+      const g = shade + (highDetail ? (row + col) % 3 : 0);
+      ctx.fillStyle = `rgb(${g},${g + 1},${g + 4})`;
       ctx.beginPath();
       for (let i = 0; i < 6; i++) {
         const a = ((60 * i - 30) * Math.PI) / 180;
-        const px = x + Math.cos(a) * radius * 0.9;
-        const py = y + Math.sin(a) * radius * 0.9;
+        const px = x + Math.cos(a) * radius * 0.88;
+        const py = y + Math.sin(a) * radius * 0.88;
         if (i === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx.strokeStyle = highDetail
+        ? "rgba(255,255,255,0.08)"
+        : "rgba(255,255,255,0.05)";
       ctx.lineWidth = 1;
       ctx.stroke();
+      if (highDetail && (row + col) % 4 === 0) {
+        ctx.fillStyle = "rgba(255,255,255,0.04)";
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
@@ -69,8 +78,55 @@ function hexTexture(size = 256): THREE.CanvasTexture {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(5, 3);
-  tex.anisotropy = 4;
+  tex.repeat.set(highDetail ? 7 : 5, highDetail ? 4 : 3);
+  tex.anisotropy = highDetail ? 8 : 4;
+  return tex;
+}
+
+function bodyPaintTexture(): THREE.CanvasTexture {
+  const size = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#f4f2ed";
+  ctx.fillRect(0, 0, size, size);
+  ctx.strokeStyle = "rgba(20,24,30,0.14)";
+  ctx.lineWidth = 2;
+  for (let i = 1; i < 8; i++) {
+    const y = (i / 8) * size;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(size, y);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(20,24,30,0.1)";
+  for (let i = 0; i < 16; i++) {
+    const x = (i / 16) * size;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, size);
+    ctx.stroke();
+  }
+  for (let i = 0; i < 120; i++) {
+    const x = (i * 47) % size;
+    const y = (i * 91) % size;
+    ctx.fillStyle = "rgba(30,34,40,0.18)";
+    ctx.fillRect(x, y, 2, 2);
+  }
+  const band = ctx.createLinearGradient(0, size * 0.55, 0, size * 0.7);
+  band.addColorStop(0, "rgba(255,90,31,0)");
+  band.addColorStop(0.5, "rgba(255,90,31,0.12)");
+  band.addColorStop(1, "rgba(255,90,31,0)");
+  ctx.fillStyle = band;
+  ctx.fillRect(0, size * 0.55, size, size * 0.15);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.repeat.set(4, 1);
+  tex.anisotropy = 8;
   return tex;
 }
 
@@ -142,70 +198,103 @@ function landingLeg(metal: THREE.Material, dark: THREE.Material) {
   return g;
 }
 
-function nozzle(copper: THREE.Material, dark: THREE.Material) {
+function nozzle(
+  copper: THREE.Material,
+  dark: THREE.Material,
+  high = false,
+) {
   const g = new THREE.Group();
+  const radial = high ? 24 : 16;
   const bell = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.05, 0.1, 0.3, 16, 1, true),
+    new THREE.CylinderGeometry(0.05, high ? 0.105 : 0.1, 0.3, radial, 1, true),
     copper,
   );
   bell.position.y = -0.08;
   g.add(bell);
   const inner = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.035, 0.07, 0.22, 12, 1, true),
+    new THREE.CylinderGeometry(0.035, 0.07, 0.22, high ? 18 : 12, 1, true),
     dark,
   );
   inner.position.y = -0.04;
   g.add(inner);
   const throat = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.032, 0.038, 0.07, 10),
+    new THREE.CylinderGeometry(0.032, 0.038, 0.07, high ? 14 : 10),
     dark,
   );
   throat.position.y = 0.1;
   g.add(throat);
+  if (high) {
+    const lip = new THREE.Mesh(
+      new THREE.TorusGeometry(0.1, 0.006, 8, 24),
+      copper,
+    );
+    lip.rotation.x = Math.PI / 2;
+    lip.position.y = -0.23;
+    g.add(lip);
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.04, 12, 10),
+      new THREE.MeshBasicMaterial({
+        color: 0xff6a2a,
+        transparent: true,
+        opacity: 0.35,
+      }),
+    );
+    glow.position.y = -0.22;
+    g.add(glow);
+  }
   return g;
 }
 
 export function createRocketModel(quality: RocketQuality = "high"): RocketModel {
   const low = quality === "low";
-  const segs = low ? 20 : 48;
-  const sphereW = low ? 16 : 40;
-  const sphereH = low ? 12 : 28;
-  const ringSegs = low ? 24 : 48;
+  const segs = low ? 20 : 64;
+  const sphereW = low ? 16 : 48;
+  const sphereH = low ? 12 : 32;
+  const ringSegs = low ? 24 : 64;
 
   const root = new THREE.Group() as RocketModel;
   root.name = "rocket";
 
+  const paintMap = low ? null : bodyPaintTexture();
   const bodyMat = mat(VARIANT.standard.body, {
+    map: paintMap ?? undefined,
     metalness: 0.12,
-    roughness: 0.42,
-    clearcoat: low ? 0.15 : 0.45,
-    clearcoatRoughness: 0.3,
+    roughness: low ? 0.42 : 0.36,
+    clearcoat: low ? 0.15 : 0.62,
+    clearcoatRoughness: low ? 0.3 : 0.22,
+    envMapIntensity: low ? 0.8 : 1.15,
   });
   const tipMat = mat(VARIANT.standard.tip, {
-    metalness: 0.9,
-    roughness: 0.25,
-    clearcoat: low ? 0 : 0.15,
-  });
-  const metalMat = mat(0xb0b7c0, { metalness: 0.85, roughness: 0.3, clearcoat: 0 });
-  const darkMat = mat(0x2c3138, { metalness: 0.7, roughness: 0.4, clearcoat: 0 });
-  const copperMat = mat(0xb87333, {
     metalness: 0.95,
-    roughness: 0.28,
+    roughness: 0.18,
+    clearcoat: low ? 0 : 0.35,
+    clearcoatRoughness: 0.2,
+  });
+  const metalMat = mat(0xb0b7c0, {
+    metalness: 0.9,
+    roughness: 0.26,
     clearcoat: low ? 0 : 0.2,
   });
+  const darkMat = mat(0x2c3138, { metalness: 0.75, roughness: 0.38, clearcoat: 0 });
+  const copperMat = mat(0xb87333, {
+    metalness: 0.96,
+    roughness: 0.24,
+    clearcoat: low ? 0 : 0.28,
+  });
   const copperHot = mat(0xc45c28, {
-    metalness: 0.9,
-    roughness: 0.32,
+    metalness: 0.92,
+    roughness: 0.3,
     emissive: new THREE.Color(0x4a1800),
-    emissiveIntensity: 0.25,
+    emissiveIntensity: 0.32,
     clearcoat: 0,
   });
   const tpsMat = mat(VARIANT.standard.tps, {
-    map: hexTexture(low ? 128 : 256),
-    metalness: 0.45,
-    roughness: 0.38,
-    clearcoat: low ? 0.2 : 0.55,
-    clearcoatRoughness: 0.25,
+    map: hexTexture(low ? 128 : 512, !low),
+    metalness: 0.5,
+    roughness: low ? 0.38 : 0.32,
+    clearcoat: low ? 0.2 : 0.7,
+    clearcoatRoughness: 0.18,
+    envMapIntensity: low ? 0.8 : 1.2,
   });
 
   const body = new THREE.Group();
@@ -234,12 +323,28 @@ export function createRocketModel(quality: RocketQuality = "high"): RocketModel 
   body.add(nose);
 
   const tip = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08, low ? 10 : 20, low ? 8 : 16),
+    new THREE.SphereGeometry(0.08, low ? 10 : 24, low ? 8 : 18),
     tipMat,
   );
   tip.scale.set(1, 1.3, 1);
   tip.position.y = 3.2;
   body.add(tip);
+
+  if (!low) {
+    const raceway = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 2.4, 0.05),
+      metalMat,
+    );
+    raceway.position.set(0.54, 0.2, 0);
+    body.add(raceway);
+
+    const windowBand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.525, 0.525, 0.08, segs),
+      darkMat,
+    );
+    windowBand.position.y = 1.35;
+    body.add(windowBand);
+  }
 
   const ringYs = low ? [1.6, -0.2] : [1.6, 0.7, -0.2, -1.0];
   for (const y of ringYs) {
@@ -268,6 +373,14 @@ export function createRocketModel(quality: RocketQuality = "high"): RocketModel 
   );
   tpsLower.position.y = -2.45;
   heatShield.add(tpsLower);
+  if (!low) {
+    const seam = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.572, 0.568, 0.06, segs),
+      darkMat,
+    );
+    seam.position.y = -0.72;
+    heatShield.add(seam);
+  }
   root.add(heatShield);
 
   const gridFins = new THREE.Group();
@@ -340,7 +453,7 @@ export function createRocketModel(quality: RocketQuality = "high"): RocketModel 
         [-0.2, 0.09, copperMat],
       ];
   for (const [x, z, m] of nozzles) {
-    const n = nozzle(m, darkMat);
+    const n = nozzle(m, darkMat, !low);
     n.position.set(x, 0, z);
     engines.add(n);
   }

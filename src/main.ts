@@ -2,6 +2,8 @@ import { applyReducedMotionClass } from "./motion/reducedMotion";
 import { Preloader, runBootProgress } from "./motion/preloader";
 import { initSectionReveal } from "./motion/sectionReveal";
 import { bindWaitlistForm } from "./motion/waitlistForm";
+import { bindVideoOverlay } from "./motion/videoOverlay";
+import { bindAnalyticsClicks, track } from "./lib/analytics";
 import type { WebGLApp } from "./webgl/App";
 
 let app: WebGLApp | null = null;
@@ -14,29 +16,8 @@ function bindVariants(instance: WebGLApp) {
       const id = card.dataset.variant as "standard" | "heavy" | "reusable";
       cards.forEach((c) => c.classList.toggle("is-active", c === card));
       instance.setVariant(id);
+      track("variant_select", { variant: id });
     });
-  });
-}
-
-function bindVideoOverlay() {
-  const overlay = document.getElementById("video-overlay");
-  const openers = document.querySelectorAll("[data-open-reel]");
-  const closer = document.querySelector("[data-close-reel]");
-  if (!overlay) return;
-
-  const open = () => {
-    overlay.hidden = false;
-    document.body.style.overflow = "hidden";
-  };
-  const close = () => {
-    overlay.hidden = true;
-    document.body.style.overflow = "";
-  };
-
-  openers.forEach((btn) => btn.addEventListener("click", open));
-  closer?.addEventListener("click", close);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) close();
   });
 }
 
@@ -56,13 +37,19 @@ async function init() {
   const isMobile = window.matchMedia("(max-width: 767.98px)").matches;
   const preloader = new Preloader({ minMs: isMobile ? 700 : 1000 });
   preloader.start();
-  const boot = runBootProgress(preloader, [12, 28, 44, 58, 70], isMobile ? 100 : 140);
+  const boot = runBootProgress(
+    preloader,
+    [12, 28, 44, 58, 70],
+    isMobile ? 100 : 140,
+  );
 
   const reveal = initSectionReveal();
   revealDispose = reveal.dispose;
 
+  bindAnalyticsClicks();
   bindVideoOverlay();
   bindWaitlistForm();
+  track("page_view", { mobile: isMobile });
 
   try {
     preloader.setProgress(35);
@@ -83,6 +70,7 @@ async function init() {
 
   await preloader.finish();
   reveal.revealHeroNow();
+  track("experience_ready", { mobile: isMobile });
 
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {

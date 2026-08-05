@@ -1,3 +1,5 @@
+import { track } from "../lib/analytics";
+
 type StatusKind = "idle" | "loading" | "success" | "error";
 
 function setStatus(
@@ -36,6 +38,7 @@ export function bindWaitlistForm() {
     setStatus(status, "loading", "Submitting…");
 
     try {
+      const variant = String(new FormData(form).get("variant") ?? "standard");
       if (!endpoint) {
         await new Promise((r) => window.setTimeout(r, 450));
         form.reset();
@@ -45,6 +48,7 @@ export function bindWaitlistForm() {
           "Registered (demo). Add PUBLIC_FORMSPREE_ENDPOINT to collect live leads.",
         );
         if (btn) btn.textContent = "Registered";
+        track("waitlist_submit", { mode: "demo", variant });
       } else {
         const body = new FormData(form);
         body.delete("_gotcha");
@@ -61,6 +65,7 @@ export function bindWaitlistForm() {
         form.reset();
         setStatus(status, "success", "You’re on the waitlist. We’ll be in touch.");
         if (btn) btn.textContent = "Registered";
+        track("waitlist_submit", { mode: "live", variant });
       }
 
       window.setTimeout(() => {
@@ -76,6 +81,7 @@ export function bindWaitlistForm() {
         "error",
         "Couldn’t submit right now. Try again in a moment.",
       );
+      track("waitlist_error");
       if (btn) {
         btn.disabled = false;
         btn.textContent = defaultLabel;

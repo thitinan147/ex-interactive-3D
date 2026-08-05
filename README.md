@@ -58,3 +58,25 @@ PUBLIC_FORMSPREE_ENDPOINT=https://formspree.io/f/xxxxxxxx
 
 OG ไฟล์ local: `public/meta/og_image.png` (1200×630)  
 ดูตอน dev: http://127.0.0.1:4321/meta/og_image.png
+
+## Launch reel (Grok gen)
+
+Default player uses a **local MP4** generated with Imagine:
+
+```
+image_gen (16:9 pad frame)
+  → image_to_video (6s push-in + engine glow)
+  → public/videos/launch-reel.mp4
+```
+
+Watch launch / Play reel → overlay HTML5 `<video>`.
+
+Optional override with Vimeo / analytics:
+
+```bash
+PUBLIC_VIMEO_ID=123456789          # if set, uses Vimeo instead of local file
+PUBLIC_VIMEO_HASH=
+PUBLIC_CF_BEACON=your-token        # Cloudflare Web Analytics
+```
+
+Analytics: `track()` + `data-track` clicks; CF beacon only if token set. Dev logs events in console.

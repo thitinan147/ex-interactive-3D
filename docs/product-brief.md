@@ -49,3 +49,12 @@ Reconstruction is **code-only** from the reference (img2threejs methodology): og
 | OG image | `public/meta/og_image.png` (1200×630) |
 | Form endpoint | `PUBLIC_FORMSPREE_ENDPOINT` |
 | Site URL | `PUBLIC_SITE_URL` (sitemap + absolute OG URLs) |
+| Local reel (default) | `public/videos/launch-reel.mp4` (Grok image_to_video) |
+| Vimeo override | `PUBLIC_VIMEO_ID` (+ optional `PUBLIC_VIMEO_HASH`) |
+| Analytics | `PUBLIC_CF_BEACON` + client `track()` / `data-track` |
+
+## Polish notes
+
+- Desktop rocket: paint atlas, denser hex TPS, raceway, engine glow, RoomEnvironment IBL  
+- Mobile rocket stays low-quality path for FPS  
+- Reel: Grok-generated local MP4 by default; Vimeo if env set; tear down on close, Escape to dismiss

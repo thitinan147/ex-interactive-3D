@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { HeroScene } from "./scenes/HeroScene";
 import { ScrollDirector } from "./ScrollDirector";
 
@@ -59,6 +60,15 @@ export class WebGLApp {
     this.camera.position.copy(this.camPos);
 
     this.scene.fog = new THREE.FogExp2(0x0b0d10, this.isMobile ? 0.02 : 0.014);
+
+    if (!this.isMobile) {
+      const pmrem = new THREE.PMREMGenerator(this.renderer);
+      this.scene.environment = pmrem.fromScene(
+        new RoomEnvironment(),
+        0.04,
+      ).texture;
+      pmrem.dispose();
+    }
 
     this.setupLights();
     this.hero = new HeroScene(
