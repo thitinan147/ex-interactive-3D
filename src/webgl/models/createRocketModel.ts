@@ -5,6 +5,8 @@ export type RocketVariant = "standard" | "heavy" | "reusable";
 export type RocketModel = THREE.Group & {
   setVariant: (id: RocketVariant) => void;
   setExplode: (t: number) => void;
+  setLandingGear: (deploy: number) => void;
+  setEngineBurn: (burn: number) => void;
 };
 
 const VARIANT: Record<
@@ -23,10 +25,10 @@ function mat(
   return new THREE.MeshPhysicalMaterial({
     color,
     metalness: 0.2,
-    roughness: 0.45,
-    clearcoat: 0.15,
-    clearcoatRoughness: 0.5,
-    envMapIntensity: 0.8,
+    roughness: 0.5,
+    clearcoat: 0.08,
+    clearcoatRoughness: 0.55,
+    envMapIntensity: 0.45,
     ...opts,
   });
 }
@@ -231,16 +233,6 @@ function nozzle(
     lip.rotation.x = Math.PI / 2;
     lip.position.y = -0.23;
     g.add(lip);
-    const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.04, 12, 10),
-      new THREE.MeshBasicMaterial({
-        color: 0xff6a2a,
-        transparent: true,
-        opacity: 0.35,
-      }),
-    );
-    glow.position.y = -0.22;
-    g.add(glow);
   }
   return g;
 }
@@ -257,44 +249,53 @@ export function createRocketModel(quality: RocketQuality = "high"): RocketModel 
 
   const paintMap = low ? null : bodyPaintTexture();
   const bodyMat = mat(VARIANT.standard.body, {
-    map: paintMap ?? undefined,
-    metalness: 0.12,
-    roughness: low ? 0.42 : 0.36,
-    clearcoat: low ? 0.15 : 0.62,
-    clearcoatRoughness: low ? 0.3 : 0.22,
-    envMapIntensity: low ? 0.8 : 1.15,
+    ...(paintMap ? { map: paintMap } : {}),
+    metalness: 0.06,
+    roughness: low ? 0.58 : 0.55,
+    clearcoat: low ? 0.04 : 0.1,
+    clearcoatRoughness: low ? 0.55 : 0.5,
+    envMapIntensity: low ? 0.22 : 0.25,
   });
   const tipMat = mat(VARIANT.standard.tip, {
-    metalness: 0.95,
-    roughness: 0.18,
-    clearcoat: low ? 0 : 0.35,
-    clearcoatRoughness: 0.2,
+    metalness: 0.82,
+    roughness: 0.34,
+    clearcoat: low ? 0 : 0.06,
+    clearcoatRoughness: 0.42,
+    envMapIntensity: 0.35,
   });
-  const metalMat = mat(0xb0b7c0, {
-    metalness: 0.9,
-    roughness: 0.26,
-    clearcoat: low ? 0 : 0.2,
-  });
-  const darkMat = mat(0x2c3138, { metalness: 0.75, roughness: 0.38, clearcoat: 0 });
-  const copperMat = mat(0xb87333, {
-    metalness: 0.96,
-    roughness: 0.24,
-    clearcoat: low ? 0 : 0.28,
-  });
-  const copperHot = mat(0xc45c28, {
-    metalness: 0.92,
-    roughness: 0.3,
-    emissive: new THREE.Color(0x4a1800),
-    emissiveIntensity: 0.32,
+  const metalMat = mat(0x7e868f, {
+    metalness: 0.78,
+    roughness: 0.45,
     clearcoat: 0,
+    envMapIntensity: 0.32,
+  });
+  const darkMat = mat(0x2a2e34, {
+    metalness: 0.55,
+    roughness: 0.55,
+    clearcoat: 0,
+    envMapIntensity: 0.22,
+  });
+  const copperMat = mat(0x9a6432, {
+    metalness: 0.86,
+    roughness: 0.42,
+    clearcoat: 0,
+    envMapIntensity: 0.35,
+  });
+  const copperHot = mat(0x8a4e26, {
+    metalness: 0.8,
+    roughness: 0.48,
+    emissive: new THREE.Color(0x1a0800),
+    emissiveIntensity: 0.08,
+    clearcoat: 0,
+    envMapIntensity: 0.3,
   });
   const tpsMat = mat(VARIANT.standard.tps, {
     map: hexTexture(low ? 128 : 512, !low),
-    metalness: 0.5,
-    roughness: low ? 0.38 : 0.32,
-    clearcoat: low ? 0.2 : 0.7,
-    clearcoatRoughness: 0.18,
-    envMapIntensity: low ? 0.8 : 1.2,
+    metalness: 0.18,
+    roughness: low ? 0.62 : 0.58,
+    clearcoat: low ? 0.05 : 0.1,
+    clearcoatRoughness: 0.45,
+    envMapIntensity: low ? 0.18 : 0.2,
   });
 
   const body = new THREE.Group();
@@ -412,12 +413,14 @@ export function createRocketModel(quality: RocketQuality = "high"): RocketModel 
   const legs = new THREE.Group();
   legs.name = "legs";
   legs.position.y = -1.7;
+  const legAngles: number[] = [];
   for (let i = 0; i < 4; i++) {
     const leg = landingLeg(metalMat, darkMat);
     const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-    leg.position.set(Math.cos(a) * 0.4, 0, Math.sin(a) * 0.4);
+    legAngles.push(a);
+    leg.position.set(Math.cos(a) * 0.22, 0.05, Math.sin(a) * 0.22);
     leg.rotation.y = -a + Math.PI / 2;
-    leg.rotation.z = 0.5;
+    leg.rotation.z = 0.08;
     legs.add(leg);
   }
   root.add(legs);
@@ -459,57 +462,57 @@ export function createRocketModel(quality: RocketQuality = "high"): RocketModel 
   }
   root.add(engines);
 
-  const restY: Record<string, number> = {
-    body: 0,
-    heatShield: 0,
-    gridFins: 1.75,
-    flaps: -1.05,
-    legs: -1.7,
-    engines: -2.65,
-  };
-  const explodeY: Record<string, number> = {
-    body: 0.2,
-    heatShield: -0.4,
-    gridFins: 0.9,
-    flaps: -0.3,
-    legs: -1.0,
-    engines: -1.3,
-  };
+  let gearDeploy = 0;
+  let engineBurn = 0.12;
 
   root.setVariant = (id) => {
     const c = VARIANT[id];
     bodyMat.color.setHex(c.body);
     tipMat.color.setHex(c.tip);
     tpsMat.color.setHex(c.tps);
-    if (id === "reusable") {
-      copperHot.emissiveIntensity = 0.55;
-      copperHot.emissive.setHex(0xff5a1f);
-    } else {
-      copperHot.emissiveIntensity = 0.25;
-      copperHot.emissive.setHex(0x4a1800);
-    }
+    root.setEngineBurn(engineBurn);
   };
 
-  root.setExplode = (t) => {
-    const k = THREE.MathUtils.clamp(t, 0, 1);
-    const e = k * k * (3 - 2 * k);
-    for (const child of root.children) {
-      const n = child.name;
-      if (!(n in restY)) continue;
-      child.position.y = restY[n] + explodeY[n] * e;
-    }
+  root.setLandingGear = (deploy) => {
+    gearDeploy = THREE.MathUtils.clamp(deploy, 0, 1);
+    const e = gearDeploy * gearDeploy * (3 - 2 * gearDeploy);
+    legs.children.forEach((leg, i) => {
+      const a = legAngles[i];
+      const r = THREE.MathUtils.lerp(0.2, 0.42, e);
+      const z = THREE.MathUtils.lerp(0.06, 0.52, e);
+      const y = THREE.MathUtils.lerp(0.08, 0, e);
+      leg.position.set(Math.cos(a) * r, y, Math.sin(a) * r);
+      leg.rotation.y = -a + Math.PI / 2;
+      leg.rotation.z = z;
+    });
+    // grid fins tilt out slightly on entry, settle later
+    const finT = THREE.MathUtils.smoothstep(gearDeploy, 0, 0.55);
     gridFins.children.forEach((fin, i) => {
       const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-      const r = 0.62 + e * 0.4;
+      const r = 0.62 + finT * 0.06;
       fin.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-    });
-    legs.children.forEach((leg, i) => {
-      const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-      const r = 0.4 + e * 0.5;
-      leg.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-      leg.rotation.z = 0.5 + e * 0.35;
+      fin.rotation.z = 0.05 + finT * 0.12;
     });
   };
+
+  root.setEngineBurn = (burn) => {
+    engineBurn = THREE.MathUtils.clamp(burn, 0, 1);
+    // Keep energy on nozzles only; cap so bloom does not lift the stack
+    copperHot.emissiveIntensity = 0.04 + engineBurn * 0.28;
+    copperHot.emissive.setRGB(
+      0.12 + engineBurn * 0.35,
+      0.03 + engineBurn * 0.08,
+      0.008,
+    );
+  };
+
+  // legacy API — landing story supersedes explode
+  root.setExplode = () => {
+    root.setLandingGear(gearDeploy);
+  };
+
+  root.setLandingGear(0);
+  root.setEngineBurn(0.1);
 
   root.traverse((o) => {
     if (o instanceof THREE.Mesh) {

@@ -64,3 +64,6 @@ ehthumbs.db
 
 # OG compose helper (source stays; regenerated HTML optional)
 scripts/og-compose.html
+
+# local phase-A QA captures
+qa-phase-a*.png

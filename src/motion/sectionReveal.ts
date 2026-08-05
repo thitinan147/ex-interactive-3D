@@ -6,6 +6,31 @@ export type SectionRevealHandle = {
   dispose: () => void;
 };
 
+function escapeHtml(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Split element text into word spans for GSAP (keeps spaces). */
+export function splitWords(el: HTMLElement) {
+  if (el.dataset.split === "words") return;
+  const text = el.textContent ?? "";
+  if (!text.trim()) return;
+  el.dataset.split = "words";
+  el.setAttribute("aria-label", text.trim());
+  const parts = text.split(/(\s+)/);
+  el.innerHTML = parts
+    .map((part) => {
+      if (!part) return "";
+      if (/^\s+$/.test(part)) return part;
+      return `<span class="split-word"><span class="split-word__inner">${escapeHtml(part)}</span></span>`;
+    })
+    .join("");
+}
+
 export function initSectionReveal(): SectionRevealHandle {
   const reduced = prefersReducedMotion();
   const items = Array.from(
@@ -24,25 +49,62 @@ export function initSectionReveal(): SectionRevealHandle {
     return { revealHeroNow: () => undefined, dispose: () => undefined };
   }
 
-  gsap.set(items, { opacity: 0, y: 28 });
-
   const revealed = new WeakSet<Element>();
   const observers: IntersectionObserver[] = [];
+
+  // prepare all up front so layout is stable
+  items.forEach((el) => {
+    if (el.matches("h1,h2,h3,p.o-kicker,p.o-body,.o-title")) splitWords(el);
+  });
+  gsap.set(document.querySelectorAll(".split-word__inner"), {
+    opacity: 0,
+    y: 18,
+  });
+  gsap.set(
+    items.filter((el) => !el.querySelector(".split-word")),
+    { opacity: 0, y: 28 },
+  );
 
   const play = (els: HTMLElement[]) => {
     const pending = els.filter((el) => !revealed.has(el));
     if (pending.length === 0) return;
     pending.forEach((el) => revealed.add(el));
-    gsap.to(pending, {
-      opacity: 1,
-      y: 0,
-      duration: 0.85,
-      stagger: 0.07,
-      ease: "power3.out",
-      onStart: () => {
-        pending.forEach((el) => el.classList.add("is-revealed"));
-      },
+
+    const wordHosts = pending.filter((el) => el.querySelector(".split-word"));
+    const blocks = pending.filter((el) => !el.querySelector(".split-word"));
+    const words = wordHosts.flatMap((el) =>
+      Array.from(el.querySelectorAll<HTMLElement>(".split-word__inner")),
+    );
+
+    const tl = gsap.timeline({
+      defaults: { ease: "power3.out" },
+      onStart: () => pending.forEach((el) => el.classList.add("is-revealed")),
     });
+
+    if (words.length) {
+      tl.to(
+        words,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.018,
+        },
+        0,
+      );
+    }
+    if (blocks.length) {
+      tl.to(
+        blocks,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.85,
+          stagger: 0.08,
+        },
+        words.length ? 0.08 : 0,
+      );
+    }
   };
 
   const heroItems = items.filter((el) => el.closest("#hero"));
