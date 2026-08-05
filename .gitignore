@@ -37,6 +37,7 @@ blob-report/
 .playwright-mcp/
 .chrome-devtools/
 rocket-hero*.png
+qa-mobile*.png
 
 # OS
 .DS_Store
