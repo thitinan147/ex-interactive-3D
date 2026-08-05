@@ -374,6 +374,6 @@ export function createRocketModel(): RocketModel {
     }
   });
 
-  root.scale.setScalar(0.78);
+  root.scale.setScalar(0.5);
   return root;
 }

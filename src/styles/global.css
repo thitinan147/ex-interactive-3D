@@ -24,6 +24,24 @@ body {
   background: var(--color-void);
 }
 
+html.is-loading,
+html.is-loading body {
+  overflow: hidden;
+}
+
+.js-reveal {
+  will-change: opacity, transform;
+}
+
+.js-reveal.is-revealed {
+  will-change: auto;
+}
+
+html.is-reduced-motion .js-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 img,
 svg {
   display: block;
@@ -407,7 +425,6 @@ p {
   display: grid;
   place-items: center;
   background: var(--color-void);
-  transition: opacity 0.6s var(--ease-out), visibility 0.6s;
 }
 
 #preloader.is-done {
@@ -418,6 +435,9 @@ p {
 
 .preloader-inner {
   text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 0;
 }
 
 .preloader-brand {
@@ -426,6 +446,7 @@ p {
   text-transform: uppercase;
   font-size: 0.85rem;
   margin-bottom: 1.5rem;
+  color: var(--color-white);
 }
 
 .preloader-bar {
@@ -433,14 +454,14 @@ p {
   height: 1px;
   background: var(--color-line);
   overflow: hidden;
+  transform-origin: left center;
 }
 
 .preloader-bar > i {
   display: block;
   height: 100%;
   width: 0%;
-  background: var(--color-ember);
-  transition: width 0.2s linear;
+  background: linear-gradient(90deg, var(--color-ember), var(--color-ember-soft));
 }
 
 .preloader-pct {
@@ -449,6 +470,7 @@ p {
   font-size: var(--sub);
   color: var(--color-steel-dim);
   letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
 }
 
 #footer {
@@ -519,11 +541,15 @@ p {
     scroll-behavior: auto;
   }
 
-  *,
-  *::before,
-  *::after {
+  html:not(.is-loading) *,
+  html:not(.is-loading) *::before,
+  html:not(.is-loading) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  #preloader.is-done {
+    transition: none;
   }
 }

@@ -19,5 +19,6 @@ npm run preview
 ## Docs
 
 - `docs/ROCKET-BUILD-GUIDE.md` — build guide end-to-end
+- `docs/DEPLOY.md` — Cloudflare Pages deploy (deferred until v1 ship)
 - `docs/oryzo-ai-tech-stack.md` — reference stack breakdown
 - `docs/product-brief.md` — product / brand notes

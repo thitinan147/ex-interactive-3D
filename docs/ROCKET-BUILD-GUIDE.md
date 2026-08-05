@@ -483,6 +483,9 @@ Astro frontmatter + meta:
 
 ## 9. Phase 8 — Deploy เสร็จโปรเจกต์ (วัน 15)
 
+> **ข้ามไว้ก่อนได้** — คู่มือเต็มอยู่ที่ [`docs/DEPLOY.md`](./DEPLOY.md)  
+> รันเมื่อพร้อม ship v1 (หลัง motion / waitlist / mobile smoke)
+
 ### 9.1 Build
 
 ```bash
@@ -492,13 +495,14 @@ npm run preview
 
 ตรวจ `dist/` มี assets ครบ
 
-### 9.2 Cloudflare Pages
+### 9.2 Cloudflare Pages (สรุป — รายละเอียดใน DEPLOY.md)
 
-1. Push GitHub/GitLab  
-2. Cloudflare Pages → Create project → ผูก repo  
+1. Push GitHub (`thitinan147/ex-interactive-3D`)  
+2. Cloudflare Pages → Connect to Git  
 3. Build command: `npm run build`  
 4. Output directory: `dist`  
-5. ตั้ง custom domain  
+5. Node: `22` (หรือ `NODE_VERSION=22`)  
+6. (Optional) custom domain  
 
 ### 9.3 หลังขึ้น production
 

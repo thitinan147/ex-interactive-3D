@@ -14,9 +14,10 @@ export class WebGLApp {
   private isMobile: boolean;
   private reducedMotion: boolean;
 
-  private camTarget = new THREE.Vector3(0.4, 0.4, 0);
-  private camPos = new THREE.Vector3(0, 0.35, 7.0);
+  private camTarget = new THREE.Vector3(0.55, 0.05, 0);
+  private camPos = new THREE.Vector3(0.15, 0.1, 9.2);
   private lookAt = new THREE.Vector3();
+  private readonly baseRocketScale = 0.5;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.isMobile = window.matchMedia("(max-width: 767.98px)").matches;
@@ -41,21 +42,18 @@ export class WebGLApp {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.camera = new THREE.PerspectiveCamera(
-      this.isMobile ? 42 : 35,
+      this.isMobile ? 40 : 32,
       window.innerWidth / window.innerHeight,
       0.1,
       100,
     );
     this.camera.position.copy(this.camPos);
 
-    this.scene.fog = new THREE.FogExp2(0x0b0d10, 0.018);
+    this.scene.fog = new THREE.FogExp2(0x0b0d10, 0.014);
 
     this.setupLights();
     this.hero = new HeroScene(this.reducedMotion);
-    if (this.isMobile) {
-      this.hero.rocket.position.x = 0;
-      this.hero.rocket.scale.setScalar(0.85);
-    }
+    this.applyRocketFraming();
     this.scene.add(this.hero.group);
 
     this.scroll.init();
@@ -117,31 +115,38 @@ export class WebGLApp {
     this.scene.add(hemi);
   }
 
+  private applyRocketFraming() {
+    const mobile = this.isMobile;
+    const scale = this.baseRocketScale * (mobile ? 0.82 : 1);
+    this.hero.rocket.scale.setScalar(scale);
+    this.hero.rocket.position.x = mobile ? 0 : 1.05;
+  }
+
   private updateCameraForSection(id: string, t: number) {
     const mobile = this.isMobile;
-    const baseZ = mobile ? 8.0 : 7.0;
-    const baseX = mobile ? 0 : 0.2;
+    const baseZ = mobile ? 11.0 : 9.2;
+    const baseX = mobile ? 0 : 0.15;
 
     switch (id) {
       case "hero":
-        this.camPos.set(baseX, 0.35 + t * 0.15, baseZ - t * 0.35);
-        this.camTarget.set(mobile ? 0 : 0.55, 0.15, 0);
+        this.camPos.set(baseX, 0.1 + t * 0.08, baseZ - t * 0.25);
+        this.camTarget.set(mobile ? 0 : 0.55, 0.05, 0);
         break;
       case "systems":
-        this.camPos.set(baseX + 0.35, 0.15, baseZ - 0.6);
-        this.camTarget.set(mobile ? 0 : 0.4, 0.0, 0);
+        this.camPos.set(baseX + 0.2, 0.05, baseZ - 0.35);
+        this.camTarget.set(mobile ? 0 : 0.45, 0.0, 0);
         break;
       case "variants":
-        this.camPos.set(baseX - 0.15, 0.3, baseZ - 0.25);
-        this.camTarget.set(mobile ? 0 : 0.5, 0.1, 0);
+        this.camPos.set(baseX - 0.1, 0.12, baseZ - 0.15);
+        this.camTarget.set(mobile ? 0 : 0.5, 0.05, 0);
         break;
       case "specs":
-        this.camPos.set(baseX + 0.7, 0.9, baseZ - 0.9);
-        this.camTarget.set(0.2, 0.1, 0);
+        this.camPos.set(baseX + 0.45, 0.55, baseZ - 0.55);
+        this.camTarget.set(mobile ? 0 : 0.25, 0.05, 0);
         break;
       default:
-        this.camPos.set(baseX, 0.3, baseZ);
-        this.camTarget.set(mobile ? 0 : 0.45, 0.1, 0);
+        this.camPos.set(baseX, 0.1, baseZ);
+        this.camTarget.set(mobile ? 0 : 0.5, 0.05, 0);
         break;
     }
   }
@@ -151,12 +156,13 @@ export class WebGLApp {
     const h = window.innerHeight;
     this.isMobile = w <= 768;
     this.camera.aspect = w / h;
-    this.camera.fov = this.isMobile ? 42 : 35;
+    this.camera.fov = this.isMobile ? 40 : 32;
     this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(
       Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2),
     );
     this.renderer.setSize(w, h, false);
+    this.applyRocketFraming();
   };
 
   private tick = () => {
@@ -167,7 +173,11 @@ export class WebGLApp {
 
     this.hero.update(delta, elapsed);
 
-    this.camera.position.lerp(this.camPos, 0.06);
+    if (this.reducedMotion) {
+      this.camera.position.copy(this.camPos);
+    } else {
+      this.camera.position.lerp(this.camPos, 0.06);
+    }
     this.lookAt.copy(this.camTarget);
     this.camera.lookAt(this.lookAt);
 
