@@ -36,6 +36,7 @@ export class WebGLApp {
   private keyLight!: THREE.DirectionalLight;
   private hemiLight: THREE.HemisphereLight | null = null;
   private fog!: THREE.FogExp2;
+  private envStars = 1;
 
   private camTarget = new THREE.Vector3(1.35, 1.0, 0);
   private camPos = new THREE.Vector3(-1.1, 1.05, 10.6);
@@ -249,7 +250,9 @@ export class WebGLApp {
     this.fog.color.copy(env.fogColor);
     this.fog.density = env.fogDensity;
     this.ambientLight.intensity = env.ambient;
+    this.ambientLight.color.copy(env.ambientColor);
     this.keyLight.intensity = env.key;
+    this.keyLight.color.copy(env.keyColor);
     if (this.hemiLight) {
       this.hemiLight.color.copy(env.hemiSky);
       this.hemiLight.groundColor.copy(env.hemiGround);
@@ -257,9 +260,10 @@ export class WebGLApp {
     }
     this.renderer.toneMappingExposure = env.exposure;
     if (this.scene.environment) {
-      this.scene.environmentIntensity = THREE.MathUtils.lerp(0.18, 0.38, env.ocean);
+      this.scene.environmentIntensity = env.envIntensity;
     }
-    this.atmosphere.setProgress(env.stars, env.sky);
+    this.envStars = env.stars;
+    this.atmosphere.setProgress(env.stars, env.sky, env.ocean);
     document.documentElement.style.setProperty("--env-bg", env.cssBg);
     document.documentElement.dataset.env =
       env.ocean > 0.55 ? "ocean" : env.sky > 0.35 ? "sky" : "space";
@@ -323,7 +327,11 @@ export class WebGLApp {
     this.camera.updateProjectionMatrix();
 
     if (this.post && !this.isMobile) {
-      this.post.bloom.strength = 0.07 + (this.hovering ? 0.02 : 0);
+      // Starfield is CSS / dome — bloom must not square-kernel the stars
+      const spaceBloomCut = THREE.MathUtils.smoothstep(this.envStars, 0.12, 0.5);
+      this.post.bloom.strength =
+        (1 - spaceBloomCut) * (0.08 + (this.hovering ? 0.02 : 0));
+      this.post.bloom.threshold = THREE.MathUtils.lerp(0.92, 0.995, spaceBloomCut);
       this.post.composer.render();
     } else {
       this.renderer.render(this.scene, this.camera);

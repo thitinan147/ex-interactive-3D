@@ -13,6 +13,12 @@ import {
 } from "../landingProgress";
 
 const PAD_TEX = "/textures/ocean-pad-top.jpg";
+const WATER_TEX = "/textures/ocean-water.jpg";
+
+const PAD_Y = -1.54;
+const HULL_Y = -1.72;
+const OCEAN_Y = -1.68;
+const DUST_Y = -1.51;
 
 export class HeroScene {
   readonly group = new THREE.Group();
@@ -23,6 +29,7 @@ export class HeroScene {
   private padDeck: THREE.Mesh;
   private padHull: THREE.Mesh;
   private padGroup = new THREE.Group();
+  private waterMap: THREE.Texture | null = null;
 
   private readonly reducedMotion: boolean;
   private mobile = false;
@@ -64,63 +71,75 @@ export class HeroScene {
       }
     });
 
-    const groundSegs = quality === "low" ? 28 : 64;
+    const groundSegs = quality === "low" ? 32 : 72;
     const oceanMat = new THREE.MeshStandardMaterial({
-      color: 0x0d3a48,
-      metalness: 0.45,
-      roughness: 0.42,
+      color: 0x0c3544,
+      metalness: 0.55,
+      roughness: 0.28,
       transparent: true,
       opacity: 0,
       depthWrite: false,
+      envMapIntensity: 0.85,
     });
     this.ocean = new THREE.Mesh(
-      new THREE.CircleGeometry(22, groundSegs),
+      new THREE.CircleGeometry(36, groundSegs),
       oceanMat,
     );
     this.ocean.rotation.x = -Math.PI / 2;
-    this.ocean.position.y = -1.64;
+    this.ocean.position.y = OCEAN_Y;
+    this.ocean.receiveShadow = quality === "high";
     this.ocean.name = "ocean";
+    this.ocean.renderOrder = 0;
     this.padGroup.add(this.ocean);
 
     const hullMat = new THREE.MeshStandardMaterial({
       color: 0x2a3038,
-      metalness: 0.55,
-      roughness: 0.62,
+      metalness: 0.58,
+      roughness: 0.58,
       transparent: true,
       opacity: 0,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
     });
     this.padHull = new THREE.Mesh(
-      new THREE.CylinderGeometry(2.15, 2.35, 0.28, quality === "low" ? 16 : 32),
+      new THREE.CylinderGeometry(2.2, 2.4, 0.32, quality === "low" ? 16 : 32),
       hullMat,
     );
-    this.padHull.position.y = -1.7;
+    this.padHull.position.y = HULL_Y;
     this.padHull.castShadow = quality === "high";
     this.padHull.receiveShadow = quality === "high";
     this.padHull.name = "padHull";
+    this.padHull.renderOrder = 1;
     this.padGroup.add(this.padHull);
 
     const deckMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      metalness: 0.28,
-      roughness: 0.78,
+      metalness: 0.22,
+      roughness: 0.72,
       transparent: true,
       opacity: 0,
       map: null,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+      envMapIntensity: 0.55,
     });
-    this.padDeck = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 4.4), deckMat);
+    // Large enough to show water rim baked into pad top texture
+    this.padDeck = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 5.6), deckMat);
     this.padDeck.rotation.x = -Math.PI / 2;
-    this.padDeck.position.y = -1.54;
+    this.padDeck.position.y = PAD_Y;
     this.padDeck.receiveShadow = quality === "high";
     this.padDeck.name = "padDeck";
+    this.padDeck.renderOrder = 2;
     this.padGroup.add(this.padDeck);
 
-    // Legacy alias — pad deck is the touch surface
     this.ground = this.padDeck;
 
     this.dust = new THREE.Mesh(
-      new THREE.RingGeometry(0.45, 1.35, 48),
+      new THREE.RingGeometry(0.5, 1.45, 48),
       new THREE.MeshBasicMaterial({
-        color: 0xd8e0e6,
+        color: 0xd8e4ea,
         transparent: true,
         opacity: 0,
         side: THREE.DoubleSide,
@@ -128,17 +147,21 @@ export class HeroScene {
       }),
     );
     this.dust.rotation.x = -Math.PI / 2;
-    this.dust.position.y = -1.52;
+    this.dust.position.y = DUST_Y;
     this.dust.name = "dust";
+    this.dust.renderOrder = 3;
     this.padGroup.add(this.dust);
 
     this.padGroup.position.x = 2.95;
     this.group.add(this.padGroup);
 
-    this.loadPadTexture(deckMat);
+    this.loadSurfaceTextures(deckMat, oceanMat);
   }
 
-  private loadPadTexture(deckMat: THREE.MeshStandardMaterial) {
+  private loadSurfaceTextures(
+    deckMat: THREE.MeshStandardMaterial,
+    oceanMat: THREE.MeshStandardMaterial,
+  ) {
     if (typeof window === "undefined") return;
     const loader = new THREE.TextureLoader();
     loader.load(
@@ -155,6 +178,24 @@ export class HeroScene {
       () => {
         deckMat.color.set(0x4a5560);
         deckMat.needsUpdate = true;
+      },
+    );
+    loader.load(
+      WATER_TEX,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = 8;
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(6, 6);
+        this.waterMap = tex;
+        oceanMat.map = tex;
+        oceanMat.needsUpdate = true;
+      },
+      undefined,
+      () => {
+        oceanMat.color.set(0x0a3040);
+        oceanMat.needsUpdate = true;
       },
     );
   }
@@ -225,23 +266,37 @@ export class HeroScene {
       (1 - settle);
     this.posePos.set(x + drift, alt, THREE.MathUtils.lerp(0.2, 0, this.landing));
 
-    // Pad + ocean: terminal ASDS approach (after sky phase)
-    const padReveal = THREE.MathUtils.smoothstep(this.landing, 0.45, 0.86);
+    // Ocean first, pad slightly later — ASDS emerges from haze
+    const oceanReveal = THREE.MathUtils.smoothstep(this.landing, 0.4, 0.78);
+    const padReveal = THREE.MathUtils.smoothstep(this.landing, 0.48, 0.86);
     const oceanMat = this.ocean.material as THREE.MeshStandardMaterial;
     const deckMat = this.padDeck.material as THREE.MeshStandardMaterial;
     const hullMat = this.padHull.material as THREE.MeshStandardMaterial;
-    oceanMat.opacity = padReveal * 0.98;
-    oceanMat.depthWrite = padReveal > 0.35;
-    deckMat.opacity = padReveal;
-    hullMat.opacity = padReveal * 0.98;
+
+    // Opaque water when fully revealed — transparent+fog becomes a milky disc
+    const oceanSolid = oceanReveal > 0.92;
+    oceanMat.transparent = !oceanSolid;
+    oceanMat.opacity = oceanSolid ? 1 : oceanReveal;
+    oceanMat.depthWrite = oceanReveal > 0.35;
+    oceanMat.roughness = THREE.MathUtils.lerp(0.45, 0.22, oceanReveal);
+    oceanMat.metalness = THREE.MathUtils.lerp(0.35, 0.62, oceanReveal);
+
+    const padSolid = padReveal > 0.94;
+    deckMat.transparent = !padSolid;
+    deckMat.opacity = padSolid ? 1 : padReveal;
+    deckMat.depthWrite = padReveal > 0.3;
+    hullMat.transparent = !padSolid;
+    hullMat.opacity = padSolid ? 1 : padReveal * 0.98;
+    hullMat.depthWrite = padReveal > 0.3;
+
     this.padDeck.visible = padReveal > 0.02;
     this.padHull.visible = padReveal > 0.02;
-    this.ocean.visible = padReveal > 0.02;
+    this.ocean.visible = oceanReveal > 0.02;
 
-    const dustT = THREE.MathUtils.smoothstep(this.landing, 0.82, 1);
+    const dustT = THREE.MathUtils.smoothstep(this.landing, 0.84, 0.98);
     const dustMat = this.dust.material as THREE.MeshBasicMaterial;
-    dustMat.opacity = dustT * 0.4;
-    this.dust.scale.setScalar(0.55 + dustT * 1.7);
+    dustMat.opacity = dustT * 0.22 * (1 - THREE.MathUtils.smoothstep(this.landing, 0.97, 1));
+    this.dust.scale.setScalar(0.5 + dustT * 1.35);
 
     if (sectionId === "systems") {
       this.poseRotY += k * 0.25;
@@ -294,13 +349,16 @@ export class HeroScene {
     );
 
     if (this.landing > 0.85) {
-      const s = 0.55 + this.landing * 1.7 + Math.sin(elapsed * 6) * 0.03;
+      const s = 0.55 + this.landing * 1.65 + Math.sin(elapsed * 6) * 0.03;
       this.dust.scale.setScalar(s);
     }
 
-    // Subtle ocean swell when pad is visible
-    if (this.landing > 0.4 && !this.reducedMotion) {
-      this.ocean.position.y = -1.62 + Math.sin(elapsed * 0.55) * 0.012;
+    if (this.landing > 0.38 && !this.reducedMotion) {
+      this.ocean.position.y = OCEAN_Y + Math.sin(elapsed * 0.55) * 0.01;
+      if (this.waterMap) {
+        this.waterMap.offset.x = (elapsed * 0.008) % 1;
+        this.waterMap.offset.y = (elapsed * 0.005) % 1;
+      }
     }
   }
 }

@@ -75,13 +75,13 @@ const e0 = envFromLanding(0, false);
 const eMid = envFromLanding(0.35, false);
 const e1 = envFromLanding(1, false);
 log(
-  `env: L0 stars=${e0.stars.toFixed(2)} sky=${e0.sky.toFixed(2)} ocean=${e0.ocean.toFixed(2)}`,
+  `env: L0 stars=${e0.stars.toFixed(2)} sky=${e0.sky.toFixed(2)} ocean=${e0.ocean.toFixed(2)} amb=${e0.ambient.toFixed(2)} key=${e0.key.toFixed(2)} fog=${e0.fogDensity.toFixed(4)}`,
 );
 log(
   `env: L0.35 stars=${eMid.stars.toFixed(2)} sky=${eMid.sky.toFixed(2)} ocean=${eMid.ocean.toFixed(2)}`,
 );
 log(
-  `env: L1 stars=${e1.stars.toFixed(2)} sky=${e1.sky.toFixed(2)} ocean=${e1.ocean.toFixed(2)}`,
+  `env: L1 stars=${e1.stars.toFixed(2)} sky=${e1.sky.toFixed(2)} ocean=${e1.ocean.toFixed(2)} fog=${e1.fogDensity.toFixed(4)}`,
 );
 if (!(e0.stars > 0.8 && e0.ocean < 0.05)) {
   throw new Error("start should be space-dominant");
@@ -91,6 +91,18 @@ if (!(eMid.sky > 0.4 && eMid.stars < 0.6)) {
 }
 if (!(e1.ocean > 0.9 && e1.stars < 0.1)) {
   throw new Error("end should be ocean/pad dominant");
+}
+if (e1.sky > 0.35) {
+  throw new Error("sky should yield at touchdown (avoid milky haze over pad)");
+}
+if (e0.ambient < 0.2 || e0.key < 1.0) {
+  throw new Error("space lighting must keep product readable");
+}
+if (!(e1.fogDensity < e0.fogDensity)) {
+  throw new Error("ocean fog should open up vs vacuum (avoid milky disc)");
+}
+if (!e0.keyColor || !e0.ambientColor || e0.envIntensity == null) {
+  throw new Error("env phase missing product-color fields");
 }
 
 log("OK landing-smoke passed");
