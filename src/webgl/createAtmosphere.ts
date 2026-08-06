@@ -1,6 +1,7 @@
 import * as THREE from "three";
+import { asset } from "../lib/asset";
 
-const SKY_TEX = "/textures/sky-atmosphere.jpg";
+const SKY_TEX = asset("textures/sky-atmosphere.jpg");
 
 export type AtmosphereLayer = {
   group: THREE.Group;

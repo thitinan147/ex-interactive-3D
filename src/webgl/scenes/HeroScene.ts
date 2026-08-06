@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { asset } from "../../lib/asset";
 import {
   createRocketModel,
   type RocketModel,
@@ -12,9 +13,9 @@ import {
   legsFromLanding,
 } from "../landingProgress";
 
-const PAD_TEX = "/textures/ocean-pad-top.jpg";
-const WATER_TEX = "/textures/ocean-water.jpg";
-const HORIZON_TEX = "/textures/ocean-horizon.jpg";
+const PAD_TEX = asset("textures/ocean-pad-top.jpg");
+const WATER_TEX = asset("textures/ocean-water.jpg");
+const HORIZON_TEX = asset("textures/ocean-horizon.jpg");
 
 const PAD_Y = -1.54;
 const HULL_Y = -1.72;

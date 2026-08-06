@@ -1,11 +1,23 @@
-# Deploy — Cloudflare Pages
-
-> **สถานะปัจจุบัน: ยังไม่ deploy**  
-> โปรเจกต์ทำ **local only** ก่อน (`npm run dev` / `npm run preview`)  
-> เปิดเอกสารนี้เมื่อพร้อม ship v1 เท่านั้น
+# Deploy
 
 Repo: `https://github.com/thitinan147/ex-interactive-3D`  
-Stack: Astro **static** → output `dist/`
+Stack: Astro **static** → output `dist/`  
+`base`: `/ex-interactive-3D/` (GitHub project Pages)
+
+---
+
+## GitHub Pages (active path)
+
+Site URL: **https://thitinan147.github.io/ex-interactive-3D/**
+
+1. Repo **Settings → Pages → Build and deployment → Source: GitHub Actions**
+2. Push to `main` (or run workflow **Deploy to GitHub Pages** manually)
+3. Workflow: `.github/workflows/deploy-github-pages.yml`
+4. Local with base path: `http://127.0.0.1:4321/ex-interactive-3D/`
+
+---
+
+## Cloudflare Pages (optional alternate)
 
 ---
 

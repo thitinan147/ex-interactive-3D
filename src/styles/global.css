@@ -28,7 +28,7 @@ html::before {
   z-index: -1;
   pointer-events: none;
   background-color: #05060a;
-  background-image: url("/textures/space-sky.jpg");
+  background-image: var(--space-sky-url);
   background-size: cover;
   background-position: center 30%;
   background-repeat: no-repeat;

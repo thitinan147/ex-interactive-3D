@@ -10,22 +10,24 @@ import Reel from "../components/sections/Reel.astro";
 import Order from "../components/sections/Order.astro";
 import Footer from "../components/sections/Footer.astro";
 import { absoluteUrl, siteConfig } from "../lib/site";
+import { asset } from "../lib/asset";
 
 const canonical = absoluteUrl("/", Astro.site);
 const ogImage = absoluteUrl(siteConfig.ogImagePath, Astro.site);
 const vimeoId = import.meta.env.PUBLIC_VIMEO_ID ?? "";
 const vimeoHash = import.meta.env.PUBLIC_VIMEO_HASH ?? "";
 const cfBeacon = import.meta.env.PUBLIC_CF_BEACON ?? "";
-const localReel = "/videos/launch-reel.mp4";
-const localPoster = "/videos/launch-reel-poster.jpg";
+const localReel = asset("videos/launch-reel.mp4");
+const localPoster = asset("videos/launch-reel-poster.jpg");
+const spaceSkyUrl = `url("${asset("textures/space-sky.jpg")}")`;
 const hasReel = Boolean(vimeoId) || true;
 ---
 
-<html lang="en">
+<html lang="en" style={`--space-sky-url: ${spaceSkyUrl}`}>
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href={asset("favicon.svg")} />
+    <link rel="icon" href={asset("favicon.ico")} />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={siteConfig.description} />
     <meta name="generator" content={Astro.generator} />
