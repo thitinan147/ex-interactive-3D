@@ -20,7 +20,6 @@ const PAD_Y = -1.54;
 const HULL_Y = -1.72;
 const OCEAN_Y = -1.68;
 const DUST_Y = -1.51;
-const APRON_Y = -1.69;
 const HORIZON_Y = 3.2;
 
 export class HeroScene {
@@ -29,7 +28,6 @@ export class HeroScene {
   readonly ground: THREE.Mesh;
   private dust: THREE.Mesh;
   private ocean: THREE.Mesh;
-  private oceanApron: THREE.Mesh;
   private horizon: THREE.Mesh;
   private padDeck: THREE.Mesh;
   private padHull: THREE.Mesh;
@@ -96,25 +94,6 @@ export class HeroScene {
     this.ocean.name = "ocean";
     this.ocean.renderOrder = 0;
     this.padGroup.add(this.ocean);
-
-    // Soft rim so the disc does not cookie-cut against void
-    const apronMat = new THREE.MeshBasicMaterial({
-      color: 0x0a3040,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      fog: true,
-    });
-    this.oceanApron = new THREE.Mesh(
-      new THREE.RingGeometry(38, 68, groundSegs),
-      apronMat,
-    );
-    this.oceanApron.rotation.x = -Math.PI / 2;
-    this.oceanApron.position.y = APRON_Y;
-    this.oceanApron.name = "oceanApron";
-    this.oceanApron.renderOrder = -1;
-    this.padGroup.add(this.oceanApron);
 
     const horizonMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
@@ -332,42 +311,37 @@ export class HeroScene {
     const oceanReveal = THREE.MathUtils.smoothstep(this.landing, 0.4, 0.78);
     const padReveal = THREE.MathUtils.smoothstep(this.landing, 0.48, 0.86);
     const oceanMat = this.ocean.material as THREE.MeshStandardMaterial;
-    const apronMat = this.oceanApron.material as THREE.MeshBasicMaterial;
     const horizonMat = this.horizon.material as THREE.MeshBasicMaterial;
     const deckMat = this.padDeck.material as THREE.MeshStandardMaterial;
     const hullMat = this.padHull.material as THREE.MeshStandardMaterial;
 
-    // Opaque water when fully revealed — transparent+fog becomes a milky disc
-    const oceanSolid = oceanReveal > 0.92;
+    // Go opaque early — transparent water + fog paints a white disc over the pad
+    const oceanSolid = oceanReveal > 0.55;
     oceanMat.transparent = !oceanSolid;
     oceanMat.opacity = oceanSolid ? 1 : oceanReveal;
-    oceanMat.depthWrite = oceanReveal > 0.35;
+    oceanMat.depthWrite = oceanReveal > 0.25;
     oceanMat.roughness = THREE.MathUtils.lerp(0.45, 0.22, oceanReveal);
     oceanMat.metalness = THREE.MathUtils.lerp(0.35, 0.62, oceanReveal);
-
-    // Apron stays transparent so fog softens the outer rim
-    apronMat.opacity = oceanReveal * 0.72;
-    this.oceanApron.visible = oceanReveal > 0.02;
 
     horizonMat.opacity = oceanReveal * 0.88;
     this.horizon.visible = oceanReveal > 0.04;
 
-    const padSolid = padReveal > 0.94;
+    const padSolid = padReveal > 0.55;
     deckMat.transparent = !padSolid;
     deckMat.opacity = padSolid ? 1 : padReveal;
-    deckMat.depthWrite = padReveal > 0.3;
+    deckMat.depthWrite = padReveal > 0.2;
     hullMat.transparent = !padSolid;
     hullMat.opacity = padSolid ? 1 : padReveal * 0.98;
-    hullMat.depthWrite = padReveal > 0.3;
+    hullMat.depthWrite = padReveal > 0.2;
 
     this.padDeck.visible = padReveal > 0.02;
     this.padHull.visible = padReveal > 0.02;
     this.ocean.visible = oceanReveal > 0.02;
 
-    const dustT = THREE.MathUtils.smoothstep(this.landing, 0.84, 0.98);
+    // No pale dust ring — read as white circle over pad
     const dustMat = this.dust.material as THREE.MeshBasicMaterial;
-    dustMat.opacity = dustT * 0.22 * (1 - THREE.MathUtils.smoothstep(this.landing, 0.97, 1));
-    this.dust.scale.setScalar(0.5 + dustT * 1.35);
+    dustMat.opacity = 0;
+    this.dust.visible = false;
 
     if (sectionId === "systems") {
       this.poseRotY += k * 0.25;
@@ -418,11 +392,6 @@ export class HeroScene {
     this.rocket.scale.setScalar(
       this.baseScale * (1 + this.hoverStrength * 0.006),
     );
-
-    if (this.landing > 0.85) {
-      const s = 0.55 + this.landing * 1.65 + Math.sin(elapsed * 6) * 0.03;
-      this.dust.scale.setScalar(s);
-    }
 
     if (this.landing > 0.38 && !this.reducedMotion) {
       this.ocean.position.y = OCEAN_Y + Math.sin(elapsed * 0.55) * 0.01;
