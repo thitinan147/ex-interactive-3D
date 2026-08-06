@@ -8,12 +8,8 @@
 
 html {
   --env-bg: #05060a;
-  background-color: #05060a;
-  background-image: url("/textures/space-sky.jpg");
-  background-size: cover;
-  background-position: center 30%;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  --space-opacity: 1;
+  background: var(--env-bg);
   color: var(--color-white);
   font-family: var(--display-font);
   font-size: 16px;
@@ -21,21 +17,23 @@ html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   scroll-behavior: auto;
-  transition:
-    background-color 0.55s ease,
-    background-image 0.55s ease;
+  transition: background 0.55s ease;
 }
 
-html[data-env="sky"],
-html[data-env="ocean"] {
-  background-image: none;
-  background-color: transparent;
-  background: var(--env-bg);
-}
-
-html[data-env="space"] {
-  background-image: url("/textures/space-sky.jpg");
+/* Starfield layer fades continuously with landing (set via --space-opacity) */
+html::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-color: #05060a;
+  background-image: url("/textures/space-sky.jpg");
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  opacity: var(--space-opacity, 1);
+  transition: opacity 0.65s ease;
 }
 
 body {

@@ -14,11 +14,14 @@ import {
 
 const PAD_TEX = "/textures/ocean-pad-top.jpg";
 const WATER_TEX = "/textures/ocean-water.jpg";
+const HORIZON_TEX = "/textures/ocean-horizon.jpg";
 
 const PAD_Y = -1.54;
 const HULL_Y = -1.72;
 const OCEAN_Y = -1.68;
 const DUST_Y = -1.51;
+const APRON_Y = -1.69;
+const HORIZON_Y = 3.2;
 
 export class HeroScene {
   readonly group = new THREE.Group();
@@ -26,6 +29,8 @@ export class HeroScene {
   readonly ground: THREE.Mesh;
   private dust: THREE.Mesh;
   private ocean: THREE.Mesh;
+  private oceanApron: THREE.Mesh;
+  private horizon: THREE.Mesh;
   private padDeck: THREE.Mesh;
   private padHull: THREE.Mesh;
   private padGroup = new THREE.Group();
@@ -82,7 +87,7 @@ export class HeroScene {
       envMapIntensity: 0.85,
     });
     this.ocean = new THREE.Mesh(
-      new THREE.CircleGeometry(36, groundSegs),
+      new THREE.CircleGeometry(42, groundSegs),
       oceanMat,
     );
     this.ocean.rotation.x = -Math.PI / 2;
@@ -91,6 +96,42 @@ export class HeroScene {
     this.ocean.name = "ocean";
     this.ocean.renderOrder = 0;
     this.padGroup.add(this.ocean);
+
+    // Soft rim so the disc does not cookie-cut against void
+    const apronMat = new THREE.MeshBasicMaterial({
+      color: 0x0a3040,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      fog: true,
+    });
+    this.oceanApron = new THREE.Mesh(
+      new THREE.RingGeometry(38, 68, groundSegs),
+      apronMat,
+    );
+    this.oceanApron.rotation.x = -Math.PI / 2;
+    this.oceanApron.position.y = APRON_Y;
+    this.oceanApron.name = "oceanApron";
+    this.oceanApron.renderOrder = -1;
+    this.padGroup.add(this.oceanApron);
+
+    const horizonMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      fog: false,
+      side: THREE.FrontSide,
+    });
+    this.horizon = new THREE.Mesh(
+      new THREE.PlaneGeometry(110, 42),
+      horizonMat,
+    );
+    this.horizon.position.set(0, HORIZON_Y, -36);
+    this.horizon.name = "oceanHorizon";
+    this.horizon.renderOrder = -2;
+    this.padGroup.add(this.horizon);
 
     const hullMat = new THREE.MeshStandardMaterial({
       color: 0x2a3038,
@@ -155,12 +196,17 @@ export class HeroScene {
     this.padGroup.position.x = 2.95;
     this.group.add(this.padGroup);
 
-    this.loadSurfaceTextures(deckMat, oceanMat);
+    this.loadSurfaceTextures(
+      deckMat,
+      oceanMat,
+      this.horizon.material as THREE.MeshBasicMaterial,
+    );
   }
 
   private loadSurfaceTextures(
     deckMat: THREE.MeshStandardMaterial,
     oceanMat: THREE.MeshStandardMaterial,
+    horizonMat: THREE.MeshBasicMaterial,
   ) {
     if (typeof window === "undefined") return;
     const loader = new THREE.TextureLoader();
@@ -187,7 +233,7 @@ export class HeroScene {
         tex.anisotropy = 8;
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(6, 6);
+        tex.repeat.set(7, 7);
         this.waterMap = tex;
         oceanMat.map = tex;
         oceanMat.needsUpdate = true;
@@ -196,6 +242,22 @@ export class HeroScene {
       () => {
         oceanMat.color.set(0x0a3040);
         oceanMat.needsUpdate = true;
+      },
+    );
+    loader.load(
+      HORIZON_TEX,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = 4;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        horizonMat.map = tex;
+        horizonMat.needsUpdate = true;
+      },
+      undefined,
+      () => {
+        horizonMat.color.set(0x3a5a70);
+        horizonMat.needsUpdate = true;
       },
     );
   }
@@ -270,6 +332,8 @@ export class HeroScene {
     const oceanReveal = THREE.MathUtils.smoothstep(this.landing, 0.4, 0.78);
     const padReveal = THREE.MathUtils.smoothstep(this.landing, 0.48, 0.86);
     const oceanMat = this.ocean.material as THREE.MeshStandardMaterial;
+    const apronMat = this.oceanApron.material as THREE.MeshBasicMaterial;
+    const horizonMat = this.horizon.material as THREE.MeshBasicMaterial;
     const deckMat = this.padDeck.material as THREE.MeshStandardMaterial;
     const hullMat = this.padHull.material as THREE.MeshStandardMaterial;
 
@@ -280,6 +344,13 @@ export class HeroScene {
     oceanMat.depthWrite = oceanReveal > 0.35;
     oceanMat.roughness = THREE.MathUtils.lerp(0.45, 0.22, oceanReveal);
     oceanMat.metalness = THREE.MathUtils.lerp(0.35, 0.62, oceanReveal);
+
+    // Apron stays transparent so fog softens the outer rim
+    apronMat.opacity = oceanReveal * 0.72;
+    this.oceanApron.visible = oceanReveal > 0.02;
+
+    horizonMat.opacity = oceanReveal * 0.88;
+    this.horizon.visible = oceanReveal > 0.04;
 
     const padSolid = padReveal > 0.94;
     deckMat.transparent = !padSolid;

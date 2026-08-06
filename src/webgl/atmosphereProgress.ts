@@ -121,7 +121,7 @@ export function envFromLanding(L: number, mobile: boolean): EnvPhase {
 
   const cssBg =
     ocean > 0.55
-      ? `linear-gradient(180deg, #2a4a60 0%, #1e4554 48%, #0a2834 100%)`
+      ? `linear-gradient(180deg, #3a5a72 0%, #1e4554 40%, #0a2834 78%, #061820 100%)`
       : sky > 0.35
         ? `linear-gradient(180deg, #121820 0%, #2a4058 52%, #3a5a78 100%)`
         : `#05060a`;

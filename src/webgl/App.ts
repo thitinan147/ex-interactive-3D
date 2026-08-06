@@ -265,6 +265,10 @@ export class WebGLApp {
     this.envStars = env.stars;
     this.atmosphere.setProgress(env.stars, env.sky, env.ocean);
     document.documentElement.style.setProperty("--env-bg", env.cssBg);
+    document.documentElement.style.setProperty(
+      "--space-opacity",
+      String(THREE.MathUtils.clamp(env.stars, 0, 1).toFixed(3)),
+    );
     document.documentElement.dataset.env =
       env.ocean > 0.55 ? "ocean" : env.sky > 0.35 ? "sky" : "space";
   }
