@@ -18,12 +18,12 @@ Site URL: **https://thitinan147.github.io/ex-interactive-3D/**
 ### Branch rule
 
 ```text
-feature/*  →  merge  →  main  →  Actions  →  github.io
+dev (default)  →  merge when ready  →  main  →  Actions  →  github.io
 ```
 
-- Do feature work on `feature/*` (or a short-lived named branch).
-- Merge into `main` when ready to ship — that push deploys.
-- Avoid long-lived work directly on `main` (hotfixes OK).
+- **Default branch:** `dev` — daily development.
+- **Production:** `main` — push/merge here deploys GitHub Pages.
+- Optional: short `feature/*` branches off `dev`, then merge into `dev` before shipping to `main`.
 
 ---
 

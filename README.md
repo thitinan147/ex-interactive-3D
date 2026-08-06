@@ -8,7 +8,8 @@ Style and architecture reference: Lusion / [oryzo.ai](https://oryzo.ai/) (see `d
 
 **https://thitinan147.github.io/ex-interactive-3D/**
 
-Deploy: push/merge to `main` → GitHub Actions → GitHub Pages  
+Deploy: merge/push to **`main`** → GitHub Actions → GitHub Pages  
+Default working branch: **`dev`**  
 Details: `docs/DEPLOY.md`
 
 | ทำแล้ว | ยังไม่ทำ / optional |
@@ -21,24 +22,26 @@ Details: `docs/DEPLOY.md`
 ## Branch & deploy
 
 ```text
-feature/*  →  merge  →  main  →  GitHub Actions  →  github.io
+dev  (default)  →  merge when ready  →  main  →  GitHub Actions  →  github.io
 ```
 
 | Branch | ใช้ทำ | Deploy? |
 |--------|--------|---------|
-| `main` | ของจริง / พร้อมโชว์ | ใช่ (auto) |
-| `feature/*` | งานใหม่ ทดลอง | ไม่ จนกว่า merge |
+| **`dev`** | งานประจำ / default | ไม่ |
+| **`main`** | production / พร้อมโชว์ | ใช่ (auto) |
+| `feature/*` | งานย่อยแยกจาก `dev` (optional) | ไม่ |
 
 ```bash
+# daily work
+git checkout dev && git pull
+
+# ship to live
 git checkout main && git pull
-git checkout -b feature/my-change
-# ... commit on the feature branch ...
-git checkout main && git pull
-git merge feature/my-change
+git merge dev
 git push origin main
 ```
 
-Or open a PR into `main`. Prefer not to do long feature work directly on `main` (hotfixes OK).
+Optional: `git checkout -b feature/my-change` from `dev`, then merge back into `dev` before shipping to `main`.
 
 ## Quick start
 

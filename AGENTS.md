@@ -12,9 +12,9 @@ Local URL includes the project base: `http://127.0.0.1:4321/ex-interactive-3D/`.
 
 ## Git branches
 
-- Do feature work on `feature/*` (or another short-lived branch), not long sessions on `main`.
-- Merge to `main` only when ready to ship — push to `main` deploys GitHub Pages.
-- Hotfixes on `main` are OK when the user asks for a direct fix.
+- **Default branch is `dev`.** Do day-to-day work on `dev` (or short-lived `feature/*` off `dev`).
+- Merge `dev` → `main` only when ready to ship — push to `main` deploys GitHub Pages.
+- Do not treat `main` as the daily working branch. Hotfixes on `main` only when the user asks.
 
 ## Documentation
 
