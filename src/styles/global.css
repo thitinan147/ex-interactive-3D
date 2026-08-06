@@ -7,7 +7,8 @@
 }
 
 html {
-  background: var(--color-void);
+  --env-bg: #05060a;
+  background: var(--env-bg);
   color: var(--color-white);
   font-family: var(--display-font);
   font-size: 16px;
@@ -15,13 +16,14 @@ html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   scroll-behavior: auto;
+  transition: background 0.45s ease;
 }
 
 body {
   margin: 0;
   min-height: 100svh;
   overflow-x: hidden;
-  background: var(--color-void);
+  background: transparent;
 }
 
 html.is-loading,

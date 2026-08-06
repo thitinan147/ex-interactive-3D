@@ -35,7 +35,7 @@ export function engineBurnFromLanding(L: number): number {
 
 /** World Y of rocket root — high → pad (scale 0.5 desktop baseline) */
 export function altitudeY(L: number, mobile: boolean): number {
-  const high = mobile ? 1.35 : 2.05;
+  const high = mobile ? 1.35 : 1.2;
   const landed = mobile ? -0.42 : -0.22;
   // ease-in near ground (suicide burn feel)
   const e = L * L * (3 - 2 * L);

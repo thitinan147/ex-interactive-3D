@@ -12,11 +12,17 @@ import {
   legsFromLanding,
 } from "../landingProgress";
 
+const PAD_TEX = "/textures/ocean-pad-top.jpg";
+
 export class HeroScene {
   readonly group = new THREE.Group();
   readonly rocket: RocketModel;
   readonly ground: THREE.Mesh;
   private dust: THREE.Mesh;
+  private ocean: THREE.Mesh;
+  private padDeck: THREE.Mesh;
+  private padHull: THREE.Mesh;
+  private padGroup = new THREE.Group();
 
   private readonly reducedMotion: boolean;
   private mobile = false;
@@ -24,7 +30,7 @@ export class HeroScene {
   private poseRotY = -0.35;
   private poseRotX = 0;
   private poseRotZ = 0.02;
-  private posePos = new THREE.Vector3(1.05, 2.0, 0);
+  private posePos = new THREE.Vector3(2.95, 1.2, 0);
   private idleSpin = 0;
   private hoverStrength = 0;
   private targetHover = 0;
@@ -59,24 +65,62 @@ export class HeroScene {
     });
 
     const groundSegs = quality === "low" ? 28 : 64;
-    this.ground = new THREE.Mesh(
-      new THREE.CircleGeometry(4.5, groundSegs),
-      new THREE.MeshStandardMaterial({
-        color: 0x10141a,
-        metalness: 0.15,
-        roughness: 0.92,
-      }),
+    const oceanMat = new THREE.MeshStandardMaterial({
+      color: 0x0d3a48,
+      metalness: 0.45,
+      roughness: 0.42,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    this.ocean = new THREE.Mesh(
+      new THREE.CircleGeometry(22, groundSegs),
+      oceanMat,
     );
-    this.ground.rotation.x = -Math.PI / 2;
-    this.ground.position.y = -1.55;
-    this.ground.receiveShadow = quality === "high";
-    this.ground.name = "ground";
-    this.group.add(this.ground);
+    this.ocean.rotation.x = -Math.PI / 2;
+    this.ocean.position.y = -1.64;
+    this.ocean.name = "ocean";
+    this.padGroup.add(this.ocean);
+
+    const hullMat = new THREE.MeshStandardMaterial({
+      color: 0x2a3038,
+      metalness: 0.55,
+      roughness: 0.62,
+      transparent: true,
+      opacity: 0,
+    });
+    this.padHull = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.15, 2.35, 0.28, quality === "low" ? 16 : 32),
+      hullMat,
+    );
+    this.padHull.position.y = -1.7;
+    this.padHull.castShadow = quality === "high";
+    this.padHull.receiveShadow = quality === "high";
+    this.padHull.name = "padHull";
+    this.padGroup.add(this.padHull);
+
+    const deckMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      metalness: 0.28,
+      roughness: 0.78,
+      transparent: true,
+      opacity: 0,
+      map: null,
+    });
+    this.padDeck = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 4.4), deckMat);
+    this.padDeck.rotation.x = -Math.PI / 2;
+    this.padDeck.position.y = -1.54;
+    this.padDeck.receiveShadow = quality === "high";
+    this.padDeck.name = "padDeck";
+    this.padGroup.add(this.padDeck);
+
+    // Legacy alias — pad deck is the touch surface
+    this.ground = this.padDeck;
 
     this.dust = new THREE.Mesh(
-      new THREE.RingGeometry(0.35, 1.1, 48),
+      new THREE.RingGeometry(0.45, 1.35, 48),
       new THREE.MeshBasicMaterial({
-        color: 0xc4b8a4,
+        color: 0xd8e0e6,
         transparent: true,
         opacity: 0,
         side: THREE.DoubleSide,
@@ -84,13 +128,40 @@ export class HeroScene {
       }),
     );
     this.dust.rotation.x = -Math.PI / 2;
-    this.dust.position.y = -1.54;
+    this.dust.position.y = -1.52;
     this.dust.name = "dust";
-    this.group.add(this.dust);
+    this.padGroup.add(this.dust);
+
+    this.padGroup.position.x = 2.95;
+    this.group.add(this.padGroup);
+
+    this.loadPadTexture(deckMat);
+  }
+
+  private loadPadTexture(deckMat: THREE.MeshStandardMaterial) {
+    if (typeof window === "undefined") return;
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      PAD_TEX,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = 8;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        deckMat.map = tex;
+        deckMat.needsUpdate = true;
+      },
+      undefined,
+      () => {
+        deckMat.color.set(0x4a5560);
+        deckMat.needsUpdate = true;
+      },
+    );
   }
 
   setMobile(mobile: boolean) {
     this.mobile = mobile;
+    this.padGroup.position.x = mobile ? 0 : 2.95;
   }
 
   setBaseScale(scale: number) {
@@ -130,7 +201,7 @@ export class HeroScene {
     const k = smootherstep(THREE.MathUtils.clamp(t, 0, 1));
     this.landing = landingFromSection(sectionId, t);
 
-    const x = this.mobile ? 0 : 1.05;
+    const x = this.mobile ? 0 : 2.95;
     const alt = altitudeY(this.landing, this.mobile);
     const legs = legsFromLanding(this.landing);
     const burn = engineBurnFromLanding(this.landing);
@@ -139,7 +210,6 @@ export class HeroScene {
     this.rocket.setEngineBurn(burn);
     this.rocket.setExplode(0);
 
-    // gentle yaw as it comes in — settle when landed
     const settle = THREE.MathUtils.smoothstep(this.landing, 0.88, 1);
     this.poseRotY = THREE.MathUtils.lerp(-0.55 + k * 0.15, 0.35, this.landing);
     this.poseRotX = THREE.MathUtils.lerp(
@@ -149,20 +219,30 @@ export class HeroScene {
     );
     this.poseRotZ = THREE.MathUtils.lerp(0.03, 0, settle);
 
-    // slight lateral drift that corrects near pad
     const drift =
       Math.sin(this.landing * Math.PI * 1.2) *
       (this.mobile ? 0.08 : 0.14) *
       (1 - settle);
     this.posePos.set(x + drift, alt, THREE.MathUtils.lerp(0.2, 0, this.landing));
 
-    // dust bloom near touchdown
+    // Pad + ocean: terminal ASDS approach (after sky phase)
+    const padReveal = THREE.MathUtils.smoothstep(this.landing, 0.45, 0.86);
+    const oceanMat = this.ocean.material as THREE.MeshStandardMaterial;
+    const deckMat = this.padDeck.material as THREE.MeshStandardMaterial;
+    const hullMat = this.padHull.material as THREE.MeshStandardMaterial;
+    oceanMat.opacity = padReveal * 0.98;
+    oceanMat.depthWrite = padReveal > 0.35;
+    deckMat.opacity = padReveal;
+    hullMat.opacity = padReveal * 0.98;
+    this.padDeck.visible = padReveal > 0.02;
+    this.padHull.visible = padReveal > 0.02;
+    this.ocean.visible = padReveal > 0.02;
+
     const dustT = THREE.MathUtils.smoothstep(this.landing, 0.82, 1);
     const dustMat = this.dust.material as THREE.MeshBasicMaterial;
-    dustMat.opacity = dustT * 0.35;
-    this.dust.scale.setScalar(0.6 + dustT * 1.8);
+    dustMat.opacity = dustT * 0.4;
+    this.dust.scale.setScalar(0.55 + dustT * 1.7);
 
-    // section-local polish without fighting landing height
     if (sectionId === "systems") {
       this.poseRotY += k * 0.25;
     } else if (sectionId === "variants") {
@@ -191,13 +271,11 @@ export class HeroScene {
     this.rocket.rotation.x = this.poseRotX;
     this.rocket.rotation.z = this.poseRotZ;
 
-    // micro float only while high
     const bob =
       !this.reducedMotion && this.landing < 0.55
         ? Math.sin(elapsed * 0.9) * 0.03 * (1 - this.landing)
         : 0;
     const hoverLift = this.hoverStrength * 0.08 * (1 - this.landing);
-    // soft settle bounce at touchdown
     const settle =
       this.landing > 0.9 && !this.reducedMotion
         ? Math.sin((this.landing - 0.9) * 40) *
@@ -215,10 +293,14 @@ export class HeroScene {
       this.baseScale * (1 + this.hoverStrength * 0.006),
     );
 
-    // dust pulse
     if (this.landing > 0.85) {
-      const s = 0.6 + this.landing * 1.8 + Math.sin(elapsed * 6) * 0.03;
+      const s = 0.55 + this.landing * 1.7 + Math.sin(elapsed * 6) * 0.03;
       this.dust.scale.setScalar(s);
+    }
+
+    // Subtle ocean swell when pad is visible
+    if (this.landing > 0.4 && !this.reducedMotion) {
+      this.ocean.position.y = -1.62 + Math.sin(elapsed * 0.55) * 0.012;
     }
   }
 }

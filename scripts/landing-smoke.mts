@@ -70,6 +70,29 @@ const y1 = altitudeY(1, false);
 log(`altitude desktop: high=${y0.toFixed(3)} landed=${y1.toFixed(3)}`);
 if (!(y1 < y0)) throw new Error("altitude must decrease with landing progress");
 
+const { envFromLanding } = await import("../src/webgl/atmosphereProgress.ts");
+const e0 = envFromLanding(0, false);
+const eMid = envFromLanding(0.35, false);
+const e1 = envFromLanding(1, false);
+log(
+  `env: L0 stars=${e0.stars.toFixed(2)} sky=${e0.sky.toFixed(2)} ocean=${e0.ocean.toFixed(2)}`,
+);
+log(
+  `env: L0.35 stars=${eMid.stars.toFixed(2)} sky=${eMid.sky.toFixed(2)} ocean=${eMid.ocean.toFixed(2)}`,
+);
+log(
+  `env: L1 stars=${e1.stars.toFixed(2)} sky=${e1.sky.toFixed(2)} ocean=${e1.ocean.toFixed(2)}`,
+);
+if (!(e0.stars > 0.8 && e0.ocean < 0.05)) {
+  throw new Error("start should be space-dominant");
+}
+if (!(eMid.sky > 0.4 && eMid.stars < 0.6)) {
+  throw new Error("mid should show sky over space");
+}
+if (!(e1.ocean > 0.9 && e1.stars < 0.1)) {
+  throw new Error("end should be ocean/pad dominant");
+}
+
 log("OK landing-smoke passed");
 
 const outPath = process.env.LANDING_SMOKE_OUT;

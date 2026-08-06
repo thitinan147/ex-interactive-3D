@@ -8,6 +8,9 @@ import {
   sampleCamKeys,
 } from "./cameraRig";
 import { createPostStack, type PostStack } from "./post/createComposer";
+import { createAtmosphere, type AtmosphereLayer } from "./createAtmosphere";
+import { envFromLanding } from "./atmosphereProgress";
+import { landingFromSection } from "./landingProgress";
 
 const MOBILE_MQ = "(max-width: 767.98px)";
 
@@ -17,6 +20,7 @@ export class WebGLApp {
   private camera: THREE.PerspectiveCamera;
   private timer = new THREE.Timer();
   private hero: HeroScene;
+  private atmosphere: AtmosphereLayer;
   private scroll = new ScrollDirector();
   private post: PostStack | null = null;
   private raf = 0;
@@ -28,9 +32,13 @@ export class WebGLApp {
   private sectionKeys = buildSectionKeys(false);
   private targetFov = 32;
   private hovering = false;
+  private ambientLight!: THREE.AmbientLight;
+  private keyLight!: THREE.DirectionalLight;
+  private hemiLight: THREE.HemisphereLight | null = null;
+  private fog!: THREE.FogExp2;
 
-  private camTarget = new THREE.Vector3(0.55, 0.05, 0);
-  private camPos = new THREE.Vector3(0.15, 0.1, 9.2);
+  private camTarget = new THREE.Vector3(1.35, 1.0, 0);
+  private camPos = new THREE.Vector3(-1.1, 1.05, 10.6);
   private lookAt = new THREE.Vector3();
   private readonly baseRocketScale = 0.5;
 
@@ -65,12 +73,14 @@ export class WebGLApp {
       this.isMobile ? 38 : 32,
       window.innerWidth / window.innerHeight,
       0.1,
-      80,
+      120,
     );
     this.camera.position.copy(this.camPos);
     this.targetFov = this.camera.fov;
 
-    this.scene.fog = new THREE.FogExp2(0x0b0d10, this.isMobile ? 0.02 : 0.014);
+    this.fog = new THREE.FogExp2(0x05060a, this.isMobile ? 0.022 : 0.016);
+    this.scene.fog = this.fog;
+    this.renderer.setClearColor(0x05060a, 0);
 
     if (!this.isMobile) {
       const pmrem = new THREE.PMREMGenerator(this.renderer);
@@ -84,23 +94,25 @@ export class WebGLApp {
     }
 
     this.setupLights();
-    this.hero = new HeroScene(
-      this.reducedMotion,
-      this.isMobile ? "low" : "high",
-    );
+    const quality = this.isMobile ? "low" : "high";
+    this.hero = new HeroScene(this.reducedMotion, quality);
+    this.atmosphere = createAtmosphere(quality);
     this.sectionKeys = buildSectionKeys(this.isMobile);
     this.applyRocketFraming();
     this.scene.add(this.hero.group);
+    this.scene.add(this.atmosphere.group);
 
     this.scroll.init();
     this.scroll.on((state) => {
       this.hero.setProgress(state.id, state.t);
       this.updateCameraForSection(state.id, state.t);
+      this.applyEnvironment(landingFromSection(state.id, state.t));
       this.needsRender = true;
     });
 
     this.updateCameraForSection("hero", 0);
     this.hero.setProgress("hero", 0);
+    this.applyEnvironment(0);
     this.camera.position.copy(this.camPos);
     this.camera.fov = this.targetFov;
     this.camera.updateProjectionMatrix();
@@ -132,13 +144,14 @@ export class WebGLApp {
     this.scroll.dispose();
     this.timer.disconnect();
     this.post?.dispose();
+    this.atmosphere.dispose();
     this.renderer.dispose();
     this.scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh) {
+      if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
         obj.geometry.dispose();
-        const mat = obj.material;
+        const mat = (obj as THREE.Mesh).material;
         if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
-        else mat.dispose();
+        else if (mat) mat.dispose();
       }
     });
   }
@@ -186,20 +199,25 @@ export class WebGLApp {
   };
 
   private setupLights() {
-    // studio-ish: soft ambient, single key, weak fill — avoid "plastic glow"
-    const ambient = new THREE.AmbientLight(0x8a9199, this.isMobile ? 0.28 : 0.18);
-    this.scene.add(ambient);
+    this.ambientLight = new THREE.AmbientLight(
+      0x8a9199,
+      this.isMobile ? 0.22 : 0.14,
+    );
+    this.scene.add(this.ambientLight);
 
-    const key = new THREE.DirectionalLight(0xe8e4dc, this.isMobile ? 0.95 : 0.98);
-    key.position.set(5.5, 7.5, 4.5);
-    key.castShadow = !this.isMobile;
+    this.keyLight = new THREE.DirectionalLight(
+      0xe8e4dc,
+      this.isMobile ? 0.85 : 0.9,
+    );
+    this.keyLight.position.set(5.5, 7.5, 4.5);
+    this.keyLight.castShadow = !this.isMobile;
     if (!this.isMobile) {
-      key.shadow.mapSize.set(1024, 1024);
-      key.shadow.camera.near = 0.5;
-      key.shadow.camera.far = 30;
-      key.shadow.bias = -0.0002;
+      this.keyLight.shadow.mapSize.set(1024, 1024);
+      this.keyLight.shadow.camera.near = 0.5;
+      this.keyLight.shadow.camera.far = 30;
+      this.keyLight.shadow.bias = -0.0002;
     }
-    this.scene.add(key);
+    this.scene.add(this.keyLight);
 
     const rim = new THREE.DirectionalLight(0x5c6670, this.isMobile ? 0.18 : 0.2);
     rim.position.set(-6, 3, -4);
@@ -210,18 +228,41 @@ export class WebGLApp {
       fill.position.set(-3, 1.5, 5);
       this.scene.add(fill);
 
-      // tight engine wash — falloff keeps energy local
       const ember = new THREE.PointLight(0xb04e22, 0.2, 3.8, 2.4);
       ember.position.set(0.1, -2.4, 0.4);
       this.scene.add(ember);
 
-      const hemi = new THREE.HemisphereLight(0xa8b0b8, 0x161410, 0.12);
-      this.scene.add(hemi);
+      this.hemiLight = new THREE.HemisphereLight(0x1a2030, 0x08090c, 0.08);
+      this.scene.add(this.hemiLight);
     } else {
       const ember = new THREE.PointLight(0xb04e22, 0.15, 3.5, 2.2);
       ember.position.set(0, -2.05, 0.45);
       this.scene.add(ember);
+      this.hemiLight = new THREE.HemisphereLight(0x1a2030, 0x08090c, 0.06);
+      this.scene.add(this.hemiLight);
     }
+  }
+
+  /** Space → sky → ocean droneship env (SpaceX ASDS ref) */
+  private applyEnvironment(L: number) {
+    const env = envFromLanding(L, this.isMobile);
+    this.fog.color.copy(env.fogColor);
+    this.fog.density = env.fogDensity;
+    this.ambientLight.intensity = env.ambient;
+    this.keyLight.intensity = env.key;
+    if (this.hemiLight) {
+      this.hemiLight.color.copy(env.hemiSky);
+      this.hemiLight.groundColor.copy(env.hemiGround);
+      this.hemiLight.intensity = env.hemiIntensity;
+    }
+    this.renderer.toneMappingExposure = env.exposure;
+    if (this.scene.environment) {
+      this.scene.environmentIntensity = THREE.MathUtils.lerp(0.18, 0.38, env.ocean);
+    }
+    this.atmosphere.setProgress(env.stars, env.sky);
+    document.documentElement.style.setProperty("--env-bg", env.cssBg);
+    document.documentElement.dataset.env =
+      env.ocean > 0.55 ? "ocean" : env.sky > 0.35 ? "sky" : "space";
   }
 
   private applyRocketFraming() {

@@ -76,53 +76,55 @@ export function buildSectionKeys(mobile: boolean): Record<string, CamKey[]> {
         { t: 1, pos: [0.25, -0.05, 11.2], target: [0, -0.25, 0], fov: 34 },
       ],
       reel: [
-        { t: 0, pos: [0.15, -0.05, 11.4], target: [0, -0.3, 0], fov: 35 },
-        { t: 1, pos: [0.05, -0.12, 11.8], target: [0, -0.35, 0], fov: 36 },
+        { t: 0, pos: [0.15, 0.05, 11.6], target: [0, -0.45, 0], fov: 36 },
+        { t: 1, pos: [0.1, 0.45, 11.0], target: [0, -0.7, 0], fov: 38 },
       ],
       order: [
-        { t: 0, pos: [0.1, -0.08, 11.6], target: [0, -0.35, 0], fov: 36 },
-        { t: 1, pos: [0, -0.05, 11.2], target: [0, -0.4, 0], fov: 34 },
+        { t: 0, pos: [0.15, 0.5, 10.8], target: [0, -0.75, 0], fov: 38 },
+        { t: 1, pos: [0.35, 1.4, 9.4], target: [0, -1.2, 0], fov: 40 },
       ],
       footer: [
-        { t: 0, pos: [0, -0.05, 11.2], target: [0, -0.4, 0], fov: 34 },
-        { t: 1, pos: [0, -0.08, 11.5], target: [0, -0.42, 0], fov: 35 },
+        { t: 0, pos: [0.3, 1.35, 9.5], target: [0, -1.2, 0], fov: 40 },
+        { t: 1, pos: [0.15, 1.2, 10.0], target: [0, -1.15, 0], fov: 38 },
       ],
     };
   }
 
+  // Desktop: copy left / stack in right third (cam left of product)
   return {
     hero: [
-      { t: 0, pos: [0.4, 1.85, 10.8], target: [0.55, 1.7, 0], fov: 34 },
-      { t: 0.5, pos: [0.7, 1.55, 9.6], target: [0.5, 1.35, 0], fov: 32 },
-      { t: 1, pos: [0.9, 1.25, 8.8], target: [0.45, 1.05, 0], fov: 30 },
+      { t: 0, pos: [-1.1, 1.05, 10.6], target: [1.35, 1.0, 0], fov: 34 },
+      { t: 0.5, pos: [-0.7, 0.9, 9.9], target: [1.45, 0.85, 0], fov: 32 },
+      { t: 1, pos: [-0.35, 0.75, 9.3], target: [1.5, 0.65, 0], fov: 30 },
     ],
     systems: [
-      { t: 0, pos: [0.85, 1.15, 8.7], target: [0.45, 0.9, 0], fov: 30 },
-      { t: 0.45, pos: [1.35, 0.75, 7.4], target: [0.35, 0.45, 0], fov: 28 },
-      { t: 1, pos: [1.5, 0.45, 6.8], target: [0.3, 0.15, 0], fov: 27 },
+      { t: 0, pos: [-0.3, 0.65, 9.1], target: [1.55, 0.5, 0], fov: 30 },
+      { t: 0.45, pos: [0.25, 0.3, 7.9], target: [1.6, 0.1, 0], fov: 28 },
+      { t: 1, pos: [0.55, 0.05, 7.3], target: [1.55, -0.1, 0], fov: 27 },
     ],
     variants: [
-      { t: 0, pos: [1.2, 0.4, 7.2], target: [0.4, 0.1, 0], fov: 29 },
-      { t: 0.5, pos: [0.4, 0.2, 7.6], target: [0.5, -0.05, 0], fov: 30 },
-      { t: 1, pos: [-0.35, 0.05, 7.4], target: [0.45, -0.15, 0], fov: 29 },
+      { t: 0, pos: [0.4, 0.0, 7.7], target: [1.6, -0.15, 0], fov: 29 },
+      { t: 0.5, pos: [-0.15, -0.05, 8.1], target: [1.65, -0.25, 0], fov: 30 },
+      { t: 1, pos: [-0.7, -0.15, 7.9], target: [1.6, -0.35, 0], fov: 29 },
     ],
     specs: [
-      { t: 0, pos: [0.2, 0.05, 7.6], target: [0.45, -0.15, 0], fov: 30 },
-      { t: 0.55, pos: [1.1, -0.05, 6.4], target: [0.35, -0.25, 0], fov: 27 },
-      { t: 1, pos: [1.35, -0.15, 5.9], target: [0.25, -0.32, 0], fov: 26 },
+      { t: 0, pos: [-0.4, -0.1, 8.1], target: [1.6, -0.35, 0], fov: 30 },
+      { t: 0.55, pos: [0.3, -0.18, 6.9], target: [1.55, -0.42, 0], fov: 27 },
+      { t: 1, pos: [0.65, -0.25, 6.4], target: [1.5, -0.45, 0], fov: 26 },
     ],
     reel: [
-      { t: 0, pos: [0.9, -0.1, 6.6], target: [0.4, -0.3, 0], fov: 29 },
-      { t: 1, pos: [0.55, -0.12, 7.0], target: [0.5, -0.35, 0], fov: 30 },
+      { t: 0, pos: [0.35, -0.05, 7.4], target: [1.8, -0.55, 0], fov: 30 },
+      { t: 1, pos: [0.55, 0.35, 7.0], target: [2.2, -0.85, 0], fov: 32 },
     ],
+    // End: product shot of stack on ocean pad
     order: [
-      { t: 0, pos: [0.5, -0.08, 7.0], target: [0.5, -0.35, 0], fov: 30 },
-      { t: 0.5, pos: [0.85, 0.05, 6.4], target: [0.45, -0.35, 0], fov: 28 },
-      { t: 1, pos: [1.05, 0.15, 5.9], target: [0.4, -0.38, 0], fov: 27 },
+      { t: 0, pos: [0.6, 0.4, 7.0], target: [2.3, -0.9, 0], fov: 32 },
+      { t: 0.45, pos: [1.4, 1.15, 6.0], target: [2.7, -1.15, 0], fov: 34 },
+      { t: 1, pos: [2.2, 1.85, 5.2], target: [2.95, -1.35, 0], fov: 36 },
     ],
     footer: [
-      { t: 0, pos: [1.0, 0.12, 6.0], target: [0.4, -0.38, 0], fov: 27 },
-      { t: 1, pos: [0.9, 0.1, 6.3], target: [0.45, -0.4, 0], fov: 28 },
+      { t: 0, pos: [2.1, 1.8, 5.3], target: [2.95, -1.35, 0], fov: 36 },
+      { t: 1, pos: [1.7, 1.55, 5.8], target: [2.95, -1.3, 0], fov: 34 },
     ],
   };
 }
@@ -136,18 +138,19 @@ export function applyLandingCameraBias(
   outTarget: THREE.Vector3,
 ) {
   const L = landingFromSection(sectionId, localT);
-  // pull target Y with rocket altitude so framing tracks descent
   const trackY = THREE.MathUtils.lerp(
-    mobile ? 1.0 : 1.6,
-    mobile ? -0.35 : -0.32,
+    mobile ? 1.0 : 0.95,
+    mobile ? -0.85 : -1.1,
     smootherstep(L),
   );
-  outTarget.y = THREE.MathUtils.lerp(outTarget.y, trackY, 0.65);
-  // camera a bit lower as we land
+  outTarget.y = THREE.MathUtils.lerp(outTarget.y, trackY, 0.55);
+  // Pull look toward pad X as we settle
+  const padX = mobile ? 0 : 2.95;
+  outTarget.x = THREE.MathUtils.lerp(outTarget.x, padX, smootherstep(L) * 0.55);
   const camY = THREE.MathUtils.lerp(
     outPos.y,
-    THREE.MathUtils.lerp(mobile ? 1.2 : 1.7, mobile ? -0.05 : 0.12, L),
-    0.35,
+    THREE.MathUtils.lerp(mobile ? 1.2 : 1.1, mobile ? 1.1 : 1.5, L),
+    0.4,
   );
   outPos.y = camY;
 }
