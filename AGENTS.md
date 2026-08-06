@@ -8,6 +8,14 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
+Local URL includes the project base: `http://127.0.0.1:4321/ex-interactive-3D/`.
+
+## Git branches
+
+- Do feature work on `feature/*` (or another short-lived branch), not long sessions on `main`.
+- Merge to `main` only when ready to ship — push to `main` deploys GitHub Pages.
+- Hotfixes on `main` are OK when the user asks for a direct fix.
+
 ## Documentation
 
 Full documentation: https://docs.astro.build

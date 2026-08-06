@@ -4,19 +4,41 @@ Interactive 3D product site for **Vektor V-9** (reusable rocket) — Astro + Thr
 
 Style and architecture reference: Lusion / [oryzo.ai](https://oryzo.ai/) (see `docs/`).
 
-## Status — local only (ตอนนี้)
+## Live
 
-> **ทำงานบนเครื่องเท่านั้น** — ยังไม่ deploy production  
-> รันด้วย `npm run dev` / `npm run preview`  
-> Cloudflare, Formspree จริง, custom domain = ทีหลัง (ดู `docs/DEPLOY.md`)
+**https://thitinan147.github.io/ex-interactive-3D/**
 
-| ทำบน local แล้ว | ยังไม่ทำ |
-|-----------------|----------|
-| หน้าเว็บ + WebGL + scroll | Deploy Cloudflare |
-| Motion / preloader | Formspree endpoint production |
-| OG asset ใน `public/meta/` | Public URL / OG preview จริงบนโซเชียล |
-| Waitlist **demo mode** | Analytics / domain |
-| Mobile layout + perf (dynamic `three`, low-quality rocket) | Real-device QA ทุกเครื่อง |
+Deploy: push/merge to `main` → GitHub Actions → GitHub Pages  
+Details: `docs/DEPLOY.md`
+
+| ทำแล้ว | ยังไม่ทำ / optional |
+|--------|---------------------|
+| หน้าเว็บ + WebGL + scroll landing | Formspree production |
+| GitHub Pages deploy | Custom domain |
+| Waitlist **demo mode** | Real-device QA ทุกเครื่อง |
+| Mobile layout + low-quality WebGL path | Phase B polish (haze, grain, audio) |
+
+## Branch & deploy
+
+```text
+feature/*  →  merge  →  main  →  GitHub Actions  →  github.io
+```
+
+| Branch | ใช้ทำ | Deploy? |
+|--------|--------|---------|
+| `main` | ของจริง / พร้อมโชว์ | ใช่ (auto) |
+| `feature/*` | งานใหม่ ทดลอง | ไม่ จนกว่า merge |
+
+```bash
+git checkout main && git pull
+git checkout -b feature/my-change
+# ... commit on the feature branch ...
+git checkout main && git pull
+git merge feature/my-change
+git push origin main
+```
+
+Or open a PR into `main`. Prefer not to do long feature work directly on `main` (hotfixes OK).
 
 ## Quick start
 
@@ -25,7 +47,8 @@ npm install
 npm run dev
 ```
 
-เปิด http://127.0.0.1:4321/
+Open **http://127.0.0.1:4321/ex-interactive-3D/**  
+(`base` is `/ex-interactive-3D/` for project Pages.)
 
 ```bash
 npm run build
@@ -34,49 +57,31 @@ npm run preview
 
 ## Docs
 
+- `docs/DEPLOY.md` — GitHub Pages + optional Cloudflare
 - `docs/ROCKET-BUILD-GUIDE.md` — build guide end-to-end
-- `docs/DEPLOY.md` — Cloudflare Pages (ทีหลัง — ยังไม่รัน)
 - `docs/oryzo-ai-tech-stack.md` — reference stack breakdown
 - `docs/product-brief.md` — product / brand notes
-- `docs/QA-MOBILE.md` — mobile QA checklist + automated results
+- `docs/QA-MOBILE.md` — mobile QA checklist
 
-## Waitlist + Open Graph (local)
+## Waitlist + Open Graph
 
-ตอนนี้ฟอร์มรัน **demo mode** (กดแล้ว UI success ไม่ยิง CRM)
-
-เมื่อพร้อม production ค่อย copy `.env.example` → `.env` หรือ env บน host:
+Form runs in **demo mode** until Formspree is set:
 
 ```bash
-PUBLIC_SITE_URL=https://your-project.pages.dev
+PUBLIC_SITE_URL=https://thitinan147.github.io/ex-interactive-3D
 PUBLIC_FORMSPREE_ENDPOINT=https://formspree.io/f/xxxxxxxx
 ```
 
-1. สร้าง form ที่ [Formspree](https://formspree.io)
-2. ใส่ `PUBLIC_FORMSPREE_ENDPOINT`
-3. ตั้ง `PUBLIC_SITE_URL` ให้ตรงโดเมนจริง (sitemap + absolute OG URL)
-4. Deploy ทีหลังตาม `docs/DEPLOY.md`
+OG asset: `public/meta/og_image.png` (1200×630)
 
-OG ไฟล์ local: `public/meta/og_image.png` (1200×630)  
-ดูตอน dev: http://127.0.0.1:4321/meta/og_image.png
+## Launch reel
 
-## Launch reel (Grok gen)
+Default: local MP4 at `public/videos/launch-reel.mp4`.
 
-Default player uses a **local MP4** generated with Imagine:
-
-```
-image_gen (16:9 pad frame)
-  → image_to_video (6s push-in + engine glow)
-  → public/videos/launch-reel.mp4
-```
-
-Watch launch / Play reel → overlay HTML5 `<video>`.
-
-Optional override with Vimeo / analytics:
+Optional:
 
 ```bash
-PUBLIC_VIMEO_ID=123456789          # if set, uses Vimeo instead of local file
+PUBLIC_VIMEO_ID=123456789
 PUBLIC_VIMEO_HASH=
-PUBLIC_CF_BEACON=your-token        # Cloudflare Web Analytics
+PUBLIC_CF_BEACON=your-token
 ```
-
-Analytics: `track()` + `data-track` clicks; CF beacon only if token set. Dev logs events in console.

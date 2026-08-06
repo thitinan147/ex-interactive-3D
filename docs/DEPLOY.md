@@ -15,6 +15,16 @@ Site URL: **https://thitinan147.github.io/ex-interactive-3D/**
 3. Workflow: `.github/workflows/deploy-github-pages.yml`
 4. Local with base path: `http://127.0.0.1:4321/ex-interactive-3D/`
 
+### Branch rule
+
+```text
+feature/*  →  merge  →  main  →  Actions  →  github.io
+```
+
+- Do feature work on `feature/*` (or a short-lived named branch).
+- Merge into `main` when ready to ship — that push deploys.
+- Avoid long-lived work directly on `main` (hotfixes OK).
+
 ---
 
 ## Cloudflare Pages (optional alternate)
